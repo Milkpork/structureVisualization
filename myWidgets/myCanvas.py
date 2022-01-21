@@ -53,7 +53,7 @@ class myCanvas(QWidget):
 
     def mySettings(self):
         self.setAutoFillBackground(True)
-        self.setSize(400, 400)
+        self.setSize(500, 450)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.menu.rightMenuShow)  # 开放右键策略
         self.menu.triggered.connect(self.menuSlot)
