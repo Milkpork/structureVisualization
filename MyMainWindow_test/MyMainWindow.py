@@ -3,6 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from CanvasTest import CanvasTest
+from myWidgets.myInformation import myInformation
 from myWidgets.myTopBar import myTopBar
 
 
@@ -13,10 +14,14 @@ class MyMainWindow(QMainWindow):
         self.mainframe = QWidget()
         self.topBar = myTopBar(self)
         self.canvas = CanvasTest()
+        self.myInfo = myInformation()
 
         self.mainLayout = QVBoxLayout()
         self.mainBodyLayout = QHBoxLayout()
+        self.workPlaceLayout = QVBoxLayout()
+
         # 以下为成员参数的声明
+        pass
         # 基础函数
         self.mySettings()
         self.myLayout()
@@ -26,6 +31,7 @@ class MyMainWindow(QMainWindow):
         self.setWindowTitle('数据结构可视化')
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.myInfo.setText(self.canvas.title)
 
     def myLayout(self):
         self.setCentralWidget(self.mainframe)
@@ -35,7 +41,10 @@ class MyMainWindow(QMainWindow):
         self.mainLayout.addStretch(1)
         self.mainLayout.addLayout(self.mainBodyLayout)
         self.mainLayout.addStretch(1)
-        self.mainBodyLayout.addWidget(self.canvas)
+
+        self.mainBodyLayout.addLayout(self.workPlaceLayout)
+        self.workPlaceLayout.addWidget(self.myInfo)
+        self.workPlaceLayout.addWidget(self.canvas)
 
 
 if __name__ == '__main__':

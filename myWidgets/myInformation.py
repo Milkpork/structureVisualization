@@ -11,7 +11,7 @@ class myInformation(QWidget):
         self.layout = QHBoxLayout()
         self.title = QLabel()
 
-        self.setSize(800, 150)
+        self.setSize(800, 100)
         self.myLayout()
         self.mySettings()
         self.setBcPic()
@@ -22,7 +22,6 @@ class myInformation(QWidget):
 
     def mySettings(self):
         self.setAutoFillBackground(True)
-        self.title.setText('这是标题')
         self.title.setAlignment(Qt.AlignVCenter)
         self.title.setFont(QFont("宋体", 50))
 
@@ -36,6 +35,9 @@ class myInformation(QWidget):
         palette = QPalette()
         palette.setBrush(QPalette.Background, QColor(20, 90, 90))
         self.setPalette(palette)
+
+    def setText(self, text):
+        self.title.setText(text)
 
 
 if __name__ == '__main__':

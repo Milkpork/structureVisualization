@@ -5,7 +5,7 @@ myNode{
 }
 /* myNode:hover{
     background-color:#999;
-}
-myNode:Pressed{
+} */
+/* myNode:Pressed{
     background-color:red;
 } */

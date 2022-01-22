@@ -1,7 +1,6 @@
-import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor, QPalette, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QMenu, QAction, QMainWindow
+from PyQt5.QtWidgets import QWidget, QMenu, QAction
 from myWidgets.CommonHelper import CommonHelper
 
 
@@ -42,9 +41,6 @@ class myCanvas(QWidget):
 
     def __init__(self):
         super(myCanvas, self).__init__()
-        self.dict = {}
-        self.index = 0
-
         self.menu = myRightMenu()
         self.mySettings()
         self.myRightMenu()
@@ -52,8 +48,9 @@ class myCanvas(QWidget):
         self.loadQSS()
 
     def mySettings(self):
+        self.setContentsMargins(0, 0, 0, 0)
         self.setAutoFillBackground(True)
-        self.setSize(500, 450)
+        self.setSize(800, 450)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.menu.rightMenuShow)  # 开放右键策略
         self.menu.triggered.connect(self.menuSlot)
@@ -81,11 +78,17 @@ class myCanvas(QWidget):
             print(1)
         pass
 
+    def addMenuAction(self, ac):
+        self.menu.addMenuAction(ac)
+
+    def addMenuSpliter(self):
+        self.menu.addMenuSpliter()
+
     def myRightMenu(self):
         """
         需要被重载
-        self.menu.addMenuAction('xinjian') -> 向右键菜单添加一列
-        self.menu.addMenuSpliter() -> 添加分割线
+        self.addMenuAction('xinjian') -> 向右键菜单添加一列
+        self.addMenuSpliter() -> 添加分割线
         :return:
         """
         pass
@@ -114,38 +117,3 @@ class myCanvas(QWidget):
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
         self.resize(width, height)
-
-
-if __name__ == '__main__':
-    class test(QMainWindow):
-        def __init__(self):
-            super(test, self).__init__()
-            # self.setWindowFlags(Qt.FramelessWindowHint)
-            self.setCentralWidget(myCanvas())
-            self.resize(400, 400)
-
-
-    app = QApplication(sys.argv)
-    win = test()
-    win.show()
-    sys.exit(app.exec_())
-
-# class myCanvasTest(myCanvas):
-#     def __init__(self):
-#         super(myCanvasTest, self).__init__()
-#         self.index = 1
-#         self.dict = {}
-#
-#     def myRightMenu(self):
-#         self.menu.addMenuAction('新建')
-#
-#     def showUi(self):
-#         self.dict["button" + str(self.index)] = myNode(self)
-#         self.dict["button" + str(self.index)].setText("botton" + str(self.index))
-#
-#         return self.dict["button" + str(self.index)]
-#
-#     def menuSlot(self, ac):
-#         if ac.text() == '新建':
-#             self.showUi().setVisible(True)
-#             self.index += 1
