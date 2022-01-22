@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor
+from PyQt5.QtGui import QCursor, QFont
 from PyQt5.QtWidgets import QPushButton, QApplication, QWidget, QMenu, QAction
 
 from myWidgets.CommonHelper import CommonHelper
@@ -26,6 +26,7 @@ class myNode(QPushButton):
         self.setSize(80, 80)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.rightMenuShow)  # 开放右键策略
+        self.setFont(QFont('楷体', 40))
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -82,12 +83,14 @@ class myNode(QPushButton):
 
     def menuSlot(self, act):
         """
+        需要被重载
         通过act.text()来判断选中了哪个选项
         """
         pass
 
     def mouseDoubleClickEvent(self, event):
         """
+        需要被重载
         弹出数据对话框
         """
         pass
@@ -96,19 +99,8 @@ class myNode(QPushButton):
         """
         需要被重载
         设置为上下左右四个点的边界
-        目前没有实例有些错误
         """
         pass
-        # 大概是以下格式
-        # print(self.geometry())
-        # if self.geometry().x() < self.canvas.geometry().x():
-        #     self.setGeometry(self.canvas.geometry().x(), self.geometry().y(), 80, 80)
-        # elif self.geometry().x() > self.canvas.geometry().x() + self.canvas.width():
-        #     self.setGeometry(self.canvas.geometry().x() + self.canvas.width(), self.geometry().y(), 80, 80)
-        # elif self.geometry().y() < self.canvas.geometry().y():
-        #     self.setGeometry(self.geometry().x(), self.canvas.geometry().y(), 80, 80)
-        # elif self.geometry().y() > self.canvas.geometry().y() + self.canvas.height():
-        #     self.setGeometry(self.geometry().x(), self.canvas.geometry().y() + self.canvas.height(), 80, 80)
 
     def rightMenu(self):
         """

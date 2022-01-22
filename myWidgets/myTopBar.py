@@ -106,7 +106,8 @@ class myTopBar(QWidget):
         super(myTopBar, self).__init__()
         self.window = wind
         self.m_flag = False
-
+        if self.window is None:
+            raise ValueError("TopBar need a parameter to state its window")
         self.layout = QHBoxLayout()
         self.mini = minimizeButton(self.window)
         self.maxi = maximizeButton(self.window)

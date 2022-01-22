@@ -20,7 +20,6 @@ class myCanvasTest(myCanvas):
     def showUi(self):
         self.dict["button" + str(self.index)] = myNode(self)
         self.dict["button" + str(self.index)].setText("botton" + str(self.index))
-
         return self.dict["button" + str(self.index)]
 
     def menuSlot(self, ac):
