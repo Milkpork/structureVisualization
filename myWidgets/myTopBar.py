@@ -1,7 +1,3 @@
-"""
-最屎的一段-1
-"""
-
 import sys
 
 from PyQt5.QtCore import Qt
@@ -102,19 +98,27 @@ class settingsMenu(QMenu):
 
 
 class myTopBar(QWidget):
-    def __init__(self, wind=None):
+    def __init__(self, wind=None, settingExists=True):
+        """
+        注意：使用本工具条会自动为窗口设置为FramelessWindowHint
+        第一个参数用于设置该顶部条的窗口是哪个
+        第二个参数True表示需要设置按钮，False为不显示设置按钮
+        :param wind:
+        :param settingExists:
+        """
         super(myTopBar, self).__init__()
         self.window = wind
-        self.m_flag = False
         if self.window is None:
             raise ValueError("TopBar need a parameter to state its window")
+        if settingExists is False:
+            self.setting.setVisible(False)
+        self.m_flag = False
         self.layout = QHBoxLayout()
         self.mini = minimizeButton(self.window)
         self.maxi = maximizeButton(self.window)
         self.exitbutton = exitButton(self.window)
         self.setting = settingButton()
         self.settingsMenu = settingsMenu(self.window)
-
         self.myLayout()
         self.mysignalConnection()
         self.mySettings()
@@ -129,6 +133,7 @@ class myTopBar(QWidget):
         self.layout.addStretch(1)
         self.layout.addWidget(self.mini)
         self.layout.addWidget(self.maxi)
+        # self.maxi.setVisible(False)
         self.layout.addWidget(self.exitbutton)
 
     def mysignalConnection(self):
@@ -149,6 +154,8 @@ class myTopBar(QWidget):
         self.setting.setMaximumWidth(20)
         self.setting.setContentsMargins(0, 0, 0, 0)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        self.window.setWindowFlags(Qt.FramelessWindowHint)  # 设置窗口为无边框样式
 
     def menuSlot(self, ac):
         """
@@ -173,6 +180,11 @@ class myTopBar(QWidget):
         if event.button() == Qt.LeftButton:
             if self.window.isFullScreen():
                 self.window.showNormal()
+                desktop = QApplication.desktop()
+                flag = QCursor().pos().x() / desktop.width()  # 系数
+                self.window.move(int(QCursor().pos().x() - self.window.width() * flag),
+                                 QCursor().pos().y() - self.height() // 2)
+
             self.m_flag = True
             self.m_Position = event.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
             event.accept()
@@ -192,7 +204,6 @@ if __name__ == '__main__':
     class test(QMainWindow):
         def __init__(self):
             super(test, self).__init__()
-            self.setWindowFlags(Qt.FramelessWindowHint)
             self.setCentralWidget(myTopBar(self))
             self.resize(400, 400)
 
