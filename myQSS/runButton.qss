@@ -1,0 +1,15 @@
+
+MoreButton{
+    margin: -1px;
+    /* border: 1px solid black; */
+    background-color: #415411;
+}
+RunButton{
+    margin: -1px;
+    /* border: 1px solid black; */
+    background-color: #114514;
+}
+RunButton:hover,
+MoreButton:hover{
+    background-color: #996;
+}

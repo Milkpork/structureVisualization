@@ -29,7 +29,6 @@ class MyMainWindow(QMainWindow):
     def mySettings(self):
         self.resize(800, 600)
         self.setWindowTitle('数据结构可视化')
-        self.setWindowFlags(Qt.FramelessWindowHint)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.myInfo.setText(self.canvas.title)
 

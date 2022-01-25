@@ -21,6 +21,8 @@ class myInformation(QWidget):
         self.layout.addWidget(self.title)
 
     def mySettings(self):
+        self.setContentsMargins(0, 0, 0, 0)
+        self.layout.setContentsMargins(0, 0, 0, 0)
         self.setAutoFillBackground(True)
         self.title.setAlignment(Qt.AlignVCenter)
         self.title.setFont(QFont("宋体", 50))

@@ -145,6 +145,7 @@ class myTopBar(QWidget):
 
     def mySettings(self):
         self.setMaximumHeight(40)
+        self.setMinimumHeight(40)
         self.setAutoFillBackground(True)
 
         self.layout.setSpacing(10)
@@ -178,13 +179,6 @@ class myTopBar(QWidget):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
-            if self.window.isFullScreen():
-                self.window.showNormal()
-                desktop = QApplication.desktop()
-                flag = QCursor().pos().x() / desktop.width()  # 系数
-                self.window.move(int(QCursor().pos().x() - self.window.width() * flag),
-                                 QCursor().pos().y() - self.height() // 2)
-
             self.m_flag = True
             self.m_Position = event.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
             event.accept()
@@ -192,12 +186,27 @@ class myTopBar(QWidget):
 
     def mouseMoveEvent(self, QMouseEvent):
         if Qt.LeftButton and self.m_flag:
-            self.window.move(QMouseEvent.globalPos() - self.m_Position)  # 更改窗口位置
+            if self.window.isFullScreen():
+                self.window.showNormal()
+                desktop = QApplication.desktop()
+                flag = QCursor().pos().x() / desktop.width()  # 系数
+                self.window.move(int(QCursor().pos().x() - self.window.width() * flag),
+                                 QCursor().pos().y() - self.height() // 2)
+                self.m_Position = QMouseEvent.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
+            else:
+                pass
+                self.window.move(QMouseEvent.globalPos() - self.m_Position)  # 更改窗口位置
             QMouseEvent.accept()
 
     def mouseReleaseEvent(self, QMouseEvent):
         self.m_flag = False
         self.setCursor(QCursor(Qt.ArrowCursor))
+
+    def mouseDoubleClickEvent(self, event):
+        if self.window.isFullScreen():
+            self.window.showNormal()
+        else:
+            self.window.setWindowState(Qt.WindowFullScreen)  # 全屏
 
 
 if __name__ == '__main__':
