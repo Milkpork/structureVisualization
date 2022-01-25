@@ -7,8 +7,8 @@ from myWidgets.CommonHelper import CommonHelper
 
 
 class moreNode(QPushButton):
-    def __init__(self):
-        super(moreNode, self).__init__()
+    def __init__(self, wi=None):
+        super(moreNode, self).__init__(wi)
         self.settings()
 
     def settings(self):
@@ -39,7 +39,34 @@ class moreNode(QPushButton):
 
 class MoreButtonList(QWidget):
     def __init__(self):
+        self.ls = ['1', '2']  # 需要被修改
+        self.nodeList = {}
         super(MoreButtonList, self).__init__()
+        self.mainLayout = QVBoxLayout()
+        self.settings()
+        self.showList()
+
+    def settings(self):
+        self.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setContentsMargins(0, 0, 0, 0)
+        self.mainLayout.setSpacing(0)
+
+    def showList(self):
+        """
+        :return:
+        """
+        lens = len(self.ls)
+        for i in range(lens):
+            self.processNode(i, self.ls[i]).setVisible(True)
+
+    def processNode(self, i, text):
+        self.nodeList['button' + str(i)] = moreNode(self)
+        self.nodeList['button' + str(i)].setText(text)
+        # self.mainLayout.addWidget(self.nodeList['button' + str(i)])
+        self.nodeList['button' + str(i)].setContentsMargins(0, 0, 0, 0)
+        self.nodeList["button" + str(i)].setGeometry(0, 50 * i - i * 2, 100, 50)  # 这里大坑！！
+
+        return self.nodeList['button' + str(i)]
 
 
 class MoreButton(QPushButton):
@@ -156,13 +183,21 @@ class myRunButton(QWidget):
         self.mainLayout = QVBoxLayout()
 
         self.button_wapper = FundButtonWapper()
+        self.more_wapper = MoreButtonList()
+        self.more_wapper.setVisible(False)
+        self.button_wapper.moreButton.clicked.connect(self.a)
         self.settings()
         self.layouts()
         self.loadQSS()
 
+    def a(self):
+        self.more_wapper.setVisible(True)
+        self.setSize(100, 150)
+
     def layouts(self):
         self.setLayout(self.mainLayout)
         self.mainLayout.addWidget(self.button_wapper)
+        self.mainLayout.addWidget(self.more_wapper)
 
     def settings(self):
         self.setContentsMargins(0, 0, 0, 0)
