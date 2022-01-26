@@ -1,101 +1,160 @@
-import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QBoxLayout
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import Qt, QRect, QSize, QPoint
+from PyQt5.QtWidgets import QWidget, QPlainTextEdit, QTextEdit
+from PyQt5.QtGui import QColor, QPainter, QTextFormat, QKeyEvent, QWheelEvent, QMouseEvent, QTextCursor
 
 
-class Label(QLabel):
-    def minimumSizeHint(self):  # 建议的最小尺寸函数
-        return QSize(50, 50)
+class QLineNumberArea(QWidget):
+    def __init__(self, editor):
+        super().__init__(editor)
+        self.codeEditor = editor
+
+    def sizeHint(self):
+        return QSize(self.editor.lineNumberAreaWidth(), 0)
+
+    def paintEvent(self, event):
+        print('paint!!!!!')
+        self.codeEditor.lineNumberAreaPaintEvent(event)
 
 
-class Demo(QWidget):
+class QCodeEditor(QTextEdit):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.lineNumberArea = QLineNumberArea(self)
+        self.setText('aa\n' * 20)
+        self.document().blockCountChanged.connect(self.updateLineNumberAreaWidth)
+        self.document().cursorPositionChanged.connect(self.highlightCurrentLine)
+        self.verticalScrollBar().sliderMoved.connect(self.on_scroll)
+        # self.verticalScrollBar().sliderPressed.connect(self.on_scroll)
+        self.verticalScrollBar().sliderReleased.connect(self.on_scroll)
+        # self.verticalScrollBar(
+        # self.verticalScrollBar().sliderMoved.connect(self.on_scroll)
+        # self.verticalScrollBar().act
+        #     .connect(self.on_scroll)
 
-    def __init__(self):
-        super(Demo, self).__init__()
-        self.resize(300, 300)
-        self.label1 = Label('标签1')
-        self.label2 = QLabel('标签2')
-        self.label3 = QLabel('标签3')
-        self.label1.setStyleSheet('background-color: rgb(255, 0, 0)')
-        self.label2.setStyleSheet('background-color: rgb(0, 255, 0)')
-        self.label3.setStyleSheet('background-color: rgb(0, 0, 255)')
+        self.updateLineNumberAreaWidth(0)
 
-        layout = QBoxLayout(QBoxLayout.RightToLeft)  # 创建一个盒子布局
-        # 参数1  布局方向:  --必须有
-        # QBoxLayout.TopToBottom=2   从上往下
-        # QBoxLayout.BottomToTop=3  从下往上
-        # QBoxLayout.LeftToRight=0   从左往右
-        # QBoxLayout.RightToLeft=1  从右往左
+    def wheelEvent(self, d: 'QWheelEvent') -> None:
+        self.on_scroll(d)
+        super(QCodeEditor, self).wheelEvent(d)
 
-        self.setLayout(layout)  # 给self设置布局管理器
+    def on_scroll(self, event: QWheelEvent = None):
+        # print('on_scroll', event.x(), event.y())
+        self.lineNumberArea.update()  # scroll(0, None)
 
-        layout.addWidget(self.label1)  # 给布局管理器添加控件
-        # 这是QLayout的指令
+    def keyPressEvent(self, e: QKeyEvent) -> None:
 
-        # layout.addSpacing(50)  #添加间距-间距
-        # 参数   像素
+        super(QCodeEditor, self).keyPressEvent(e)
+        self.updateLineNumberArea(QRect(100, 100, 100, 100), None)
+        self.lineNumberArea.update()
+        # if e==Qt.Key_Return:
+        #     self.updateLineNumberAreaWidth(e)
 
-        layout.addWidget(self.label2)
-        layout.addWidget(self.label3)
+    def mousePressEvent(self, e: 'QMouseEvent') -> None:
+        block_number = self.cursorForPosition(self.cursor().pos()).blockNumber()
+        print(block_number)
+        super().mousePressEvent(e)
 
-        layout.setSpacing(2)  # 设置内边距---控件之间的距离
-        # 这是QLayout的指令
+        # tc = self.textCursor()
+        # # position=self.document.findBlockByNumber(1).position()
+        # tc.setPosition(1, QTextCursor.MoveAnchor)
+        # self.setTextCursor(tc)
 
-        layout.setContentsMargins(20, 30, 40, 50)  # 设置外边距--控件到窗口边框的距离
-        # 这是QLayout的指令
-        # 参数1 左边距离
-        # 参数2 上边距离
-        # 参数3 右边距离
-        # 参数4 下边距离
+        self.update()
 
-        self.label4 = QLabel('标签4')
-        self.label4.setStyleSheet('background-color: yellow')
+    def lineNumberAreaWidth(self):
+        digits = 1
+        block_count = self.document().blockCount()
 
-        layout.replaceWidget(self.label2, self.label4)  # 替换控件
-        # 把self.label2替换成self.label4
-        # 注意：被替换掉的控件不在受布局管理器的控制，要把它隐藏或删除或脱离或添加到别的布局管理器中
-        # 这是QLayout的指令
+        max_value = max(1, block_count)
+        while max_value >= 10:
+            max_value /= 10
+            digits += 1
+        space = 3 + self.fontMetrics().width('9') * digits
+        return space
 
-        # self.label2.hide()  #隐藏控件
-        self.label2.setParent(None)  # 脱离父对象
+    def updateLineNumberAreaWidth(self, e):
+        self.setViewportMargins(self.lineNumberAreaWidth(), 0, 0, 0)
 
-        # 布局的嵌套：
-        self.label5 = QLabel('标签5')
-        self.label5.setStyleSheet('background-color: rgb(255, 255, 0)')
-        self.label6 = QLabel('标签6')
-        self.label6.setStyleSheet('background-color: rgb(255, 0, 255)')
-        self.label7 = QLabel('标签7')
-        self.label7.setStyleSheet('background-color: rgb(0, 255, 255)')
-        layout1 = QBoxLayout(QBoxLayout.BottomToTop)
-        layout1.addWidget(self.label5)
-        layout1.addWidget(self.label6)
-        layout1.addWidget(self.label7)
+    def updateLineNumberArea(self, rect, dy):
+        # rect = self.height()
+        if dy:
+            self.lineNumberArea.scroll(0, dy)
+        else:
+            self.lineNumberArea.update(0, self.geometry().x(), 10, self.height())
+        if rect.contains(self.viewport().rect()):
+            self.updateLineNumberAreaWidth(0)
 
-        # layout.addLayout(layout1)  #添加布局管理器
-        # 这是QLayout的指令
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        cr = self.contentsRect()
+        self.lineNumberArea.setGeometry(QRect(cr.left(), cr.top(), self.lineNumberAreaWidth(), cr.height()))
 
-        layout.setDirection(QBoxLayout.LeftToRight)  # 设置方向
-        # direction()  返回方向
+    def highlightCurrentLine(self):
+        extraSelections = []
+        if not self.isReadOnly():
+            selection = QTextEdit.ExtraSelection()
+            lineColor = QColor(Qt.yellow).lighter(160)
+            selection.format.setBackground(lineColor)
+            selection.format.setProperty(QTextFormat.FullWidthSelection, True)
+            selection.cursor = self.textCursor()
+            selection.cursor.clearSelection()
+            extraSelections.append(selection)
+        self.setExtraSelections(extraSelections)
 
-        layout.insertWidget(3, self.label2)  # 插入控件
-        # 参数1   位置序号
+    def lineNumberAreaPaintEvent(self, event):
+        cursor = QTextCursor(self.document())
 
-        layout.insertLayout(2, layout1)  # 插入布局
-        # 参数1   位置序号
+        painter = QPainter(self.lineNumberArea)
 
-        # layout.removeWidget(self.label1)  #从布局中移除控件
-        # 不是删除控件
+        painter.fillRect(event.rect(), Qt.lightGray)
+        line_height = self.fontMetrics().height()
+        block_number = self.cursorForPosition(QPoint(0, int(line_height / 2))).blockNumber()
+        first_visible_block = self.document().findBlock(block_number)
+        blockNumber = block_number
+        cursor.setPosition(self.cursorForPosition(QPoint(0, int(line_height / 2))).position())
+        rect = self.cursorRect()
+        scroll_compensation = rect.y() - int(rect.y() / line_height) * line_height  # 补偿，从光标开始。
+        print('compensition', scroll_compensation)
 
-        layout.insertSpacing(4, 50)  # 插入空白-间距
-        # 参数1  位置索引--不包括已有空白
-        # 参数2  空白像素
+        # print(rect)
 
-        layout.setEnabled(True)  # 是否可用
-        # 默认 True
+        # self.document().findBlockByLineNumber().document().w
+        top = 0  # QPoint(0, 0)#self.blockBoundingGeometry(first_visible_block).translated(self.contentOffset()).top()
+
+        last_block_number = self.cursorForPosition(QPoint(0, self.height() - 1)).blockNumber()
+        last_visible_block = self.document().findBlock(last_block_number)
+        # print(last_block_number)
+        # self.document().findBlockByLineNumber().
+
+        # print(block_number,last_block_number,'height:',line_height)
+        if scroll_compensation < -9:
+            top = 0 + 18 + scroll_compensation
+        else:
+            top = scroll_compensation
+        bottom = top + line_height  # self.blockBoundingRect(first_visible_block).height()
+
+        # Just to make sure I use the right font
+
+        height = self.fontMetrics().height()
+        block = first_visible_block
+        while block.isValid() and (top <= event.rect().bottom()) and blockNumber < last_block_number:
+            if block.isVisible():
+                number = str(blockNumber + 1)
+                painter.setPen(Qt.black)
+                # print(top, self.lineNumberArea.width(), height, number)
+                painter.drawText(0, top, self.lineNumberArea.width(), height, Qt.AlignRight, number)
+
+            block = block.next()
+            top = bottom
+            bottom = top + line_height  # self.blockBoundingRect(block).height()
+            blockNumber += 1
 
 
 if __name__ == '__main__':
+    import sys
+    from PyQt5.QtWidgets import QApplication
+
     app = QApplication(sys.argv)
-    demo = Demo()
-    demo.show()
+    codeEditor = QCodeEditor()
+    codeEditor.show()
     sys.exit(app.exec_())

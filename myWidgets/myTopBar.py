@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor, QPalette, QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QMainWindow, QApplication, QMenu
 
-from myWidgets.CommonHelper import CommonHelper
+from myWidgets import CommonHelper
 
 
 # 基类

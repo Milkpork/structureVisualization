@@ -2,7 +2,7 @@ import sys
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPalette, QColor, QFont
-from PyQt5.QtWidgets import QLabel, QWidget, QPushButton, QMainWindow, QApplication, QHBoxLayout
+from PyQt5.QtWidgets import QLabel, QWidget, QMainWindow, QApplication, QHBoxLayout
 
 
 class myInformation(QWidget):
@@ -11,7 +11,7 @@ class myInformation(QWidget):
         self.layout = QHBoxLayout()
         self.title = QLabel()
 
-        self.setSize(800, 100)
+        self.setSize(700, 100)
         self.myLayout()
         self.mySettings()
         self.setBcPic()

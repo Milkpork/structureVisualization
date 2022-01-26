@@ -3,8 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from CanvasTest import CanvasTest
-from myWidgets.myInformation import myInformation
-from myWidgets.myTopBar import myTopBar
+from myWidgets import myInformation, myTopBar,myRunButton
 
 
 class MyMainWindow(QMainWindow):
@@ -15,10 +14,12 @@ class MyMainWindow(QMainWindow):
         self.topBar = myTopBar(self)
         self.canvas = CanvasTest()
         self.myInfo = myInformation()
+        self.runButton = myRunButton()
 
         self.mainLayout = QVBoxLayout()
         self.mainBodyLayout = QHBoxLayout()
         self.workPlaceLayout = QVBoxLayout()
+        self.runAndInfoLayout = QHBoxLayout()
 
         # 以下为成员参数的声明
         pass
@@ -42,7 +43,9 @@ class MyMainWindow(QMainWindow):
         self.mainLayout.addStretch(1)
 
         self.mainBodyLayout.addLayout(self.workPlaceLayout)
-        self.workPlaceLayout.addWidget(self.myInfo)
+        self.workPlaceLayout.addLayout(self.runAndInfoLayout)
+        self.runAndInfoLayout.addWidget(self.myInfo)
+        self.runAndInfoLayout.addWidget(self.runButton)
         self.workPlaceLayout.addWidget(self.canvas)
 
 

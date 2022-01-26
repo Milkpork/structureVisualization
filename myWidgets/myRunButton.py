@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QMainWindow, QApplication
 
-from myWidgets.CommonHelper import CommonHelper
+from myWidgets import CommonHelper
 
 
 class moreNode(QPushButton):
@@ -191,8 +191,16 @@ class myRunButton(QWidget):
         self.loadQSS()
 
     def a(self):
-        self.more_wapper.setVisible(True)
-        self.setSize(100, 150)
+        if self.size().height() == 50:
+            self.more_wapper.setVisible(True)
+            self.setSize(100, 150)
+        else:
+            self.more_wapper.setVisible(False)
+            self.setSize(100, 50)
+
+    def b(self):
+        self.more_wapper.setVisible(False)
+        self.setSize(100, 50)
 
     def layouts(self):
         self.setLayout(self.mainLayout)
