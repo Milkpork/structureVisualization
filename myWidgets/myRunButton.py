@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QMainWindow, QApplication
 
-from myWidgets import CommonHelper
+from myWidgets.CommonHelper import CommonHelper
 
 
 class moreNode(QPushButton):

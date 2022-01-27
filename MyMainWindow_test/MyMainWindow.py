@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from CanvasTest import CanvasTest
-from myWidgets import myInformation, myTopBar,myRunButton
+from myWidgets import myInformation, myTopBar,myRunButton, myLogInfo
 
 
 class MyMainWindow(QMainWindow):
@@ -15,6 +15,7 @@ class MyMainWindow(QMainWindow):
         self.canvas = CanvasTest()
         self.myInfo = myInformation()
         self.runButton = myRunButton()
+        self.info = myLogInfo()
 
         self.mainLayout = QVBoxLayout()
         self.mainBodyLayout = QHBoxLayout()
@@ -43,6 +44,8 @@ class MyMainWindow(QMainWindow):
         self.mainLayout.addStretch(1)
 
         self.mainBodyLayout.addLayout(self.workPlaceLayout)
+        self.mainBodyLayout.addWidget(self.info)
+
         self.workPlaceLayout.addLayout(self.runAndInfoLayout)
         self.runAndInfoLayout.addWidget(self.myInfo)
         self.runAndInfoLayout.addWidget(self.runButton)

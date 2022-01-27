@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor, QPalette, QColor
 from PyQt5.QtWidgets import QWidget, QMenu, QAction
-from myWidgets import CommonHelper
+from myWidgets.CommonHelper import CommonHelper
 
 
 class myRightMenu(QMenu):

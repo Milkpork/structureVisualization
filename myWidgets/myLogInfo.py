@@ -1,5 +1,5 @@
 from PyQt5.QtGui import QFont, QTextCursor
-from PyQt5.QtWidgets import QTextEdit, QLineEdit, QPushButton, QApplication, QMainWindow
+from PyQt5.QtWidgets import QTextEdit, QApplication, QMainWindow
 import sys
 
 
@@ -12,14 +12,19 @@ class myLogInfo(QTextEdit):
         self.cursorPositionChanged.connect(self.a)
 
     def a(self):
-        # print(self.toPlainText().split('\n'))
         if self.toPlainText()[-1] == '\n':
-            self.setText(self.toPlainText()[:-1] + "\n>>> ")
-            print(self.toPlainText().split('\n')[self.document().blockCount() - 2])
+            # self.setText(self.toPlainText()[:-1] + "\n>>> ")
+            order = self.toPlainText().split('\n')[self.document().blockCount() - 2]
+            self.proOrder(order.split()[1:])
+            self.fresh()
         self.cursorToEnd()
 
+    def proOrder(self, order):
+        print(order)
+        pass
+
     def fresh(self):
-        self.setText('>>> ')
+        self.append('>>> ')
         self.cursorToEnd()
 
     def settings(self):

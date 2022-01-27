@@ -4,7 +4,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor, QFont
 from PyQt5.QtWidgets import QPushButton, QApplication, QWidget, QMenu, QAction
 
-from myWidgets import CommonHelper
+from myWidgets.CommonHelper import CommonHelper
 
 
 class myNode(QPushButton):
