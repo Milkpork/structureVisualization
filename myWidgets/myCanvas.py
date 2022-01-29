@@ -36,20 +36,16 @@ class myRightMenu(QMenu):
         self.addSeparator()
 
 
-class myCanvas(QFrame):
+class myCanvas(QWidget):
     def __init__(self):
         super(myCanvas, self).__init__()
         self.menu = myRightMenu()
         self.mySettings()
         self.myRightMenu()
-        # self.setBcPic()
+        self.setBcPic()
         # self.loadQSS()
 
     def mySettings(self):
-        self.setLineWidth(0)  # 设置外线宽度
-        self.setMidLineWidth(0)  # 设置中线宽度
-        self.setFrameStyle(QFrame.WinPanel | QFrame.Raised)
-        self.setFrameRect(QRect(10, 10, 80, 80))
 
         self.setContentsMargins(0, 0, 0, 0)
         # self.setAutoFillBackground(True)

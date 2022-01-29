@@ -215,6 +215,7 @@ class MyTopBar(QWidget):
 
     def menuSlot(self, ac):
         """
+        need to be reloaded
         顶部菜单,通过ac.text()来发送选项
         :return:
         """
