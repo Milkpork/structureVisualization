@@ -1,23 +1,9 @@
-TopBarButton{
-    border-radius: 10px;
-}
-TopBarButton:hover{
-    background-color: #999;
-}
-minimizeButton{
-    border-image: url(E:/structureVisualization/mySources/pic/minte.png);
-}
-maximizeButton{
-        border-image: url(E:/structureVisualization/mySources/pic/maxi.png);
-}
-exitButton{
-    border-image: url(E:/structureVisualization/mySources/pic/close.png);
-}
-settingButton{
-    /* background-color: #bfa; */
-    border-image: url(E:/structureVisualization/mySources/pic/gear.png);
-    border-radius: 10px;
-}
-settingButton:Pressed{
-    background-color: #ccc;
-}
+TopBarButton{border-radius: 10px;}TopBarButton:hover{background-color: #999;}
+
+minimizeButton{border-image: url(E:/structureVisualization/mySources/pic/minte.png);}
+
+maximizeButton{border-image: url(E:/structureVisualization/mySources/pic/maxi.png);}
+
+exitButton{border-image: url(E:/structureVisualization/mySources/pic/close.png);}
+
+settingButton{border-image: url(E:/structureVisualization/mySources/pic/gear.png);border-radius: 10px;}settingButton:Pressed{background-color: #ccc;}

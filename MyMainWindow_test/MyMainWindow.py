@@ -1,9 +1,8 @@
 import sys
 
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QHBoxLayout
 from CanvasTest import CanvasTest
-from myWidgets import myInformation, myTopBar,myRunButton, myLogInfo
+from myWidgets import myInformation, myTopBar, myRunButton, myLogInfo
 
 
 class MyMainWindow(QMainWindow):
@@ -30,6 +29,7 @@ class MyMainWindow(QMainWindow):
 
     def mySettings(self):
         self.resize(800, 600)
+        self.move(100, 50)
         self.setWindowTitle('数据结构可视化')
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.myInfo.setText(self.canvas.title)

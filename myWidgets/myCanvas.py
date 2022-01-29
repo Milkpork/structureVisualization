@@ -1,6 +1,8 @@
-from PyQt5.QtCore import Qt
+import sys
+
+from PyQt5.QtCore import Qt, QRect
 from PyQt5.QtGui import QCursor, QPalette, QColor
-from PyQt5.QtWidgets import QWidget, QMenu, QAction
+from PyQt5.QtWidgets import QWidget, QMenu, QAction, QFrame, QApplication
 from myWidgets.CommonHelper import CommonHelper
 
 
@@ -34,22 +36,23 @@ class myRightMenu(QMenu):
         self.addSeparator()
 
 
-class myCanvas(QWidget):
-    """
-    self.canvas = myCanvas()
-    """
-
+class myCanvas(QFrame):
     def __init__(self):
         super(myCanvas, self).__init__()
         self.menu = myRightMenu()
         self.mySettings()
         self.myRightMenu()
-        self.setBcPic()
-        self.loadQSS()
+        # self.setBcPic()
+        # self.loadQSS()
 
     def mySettings(self):
+        self.setLineWidth(0)  # 设置外线宽度
+        self.setMidLineWidth(0)  # 设置中线宽度
+        self.setFrameStyle(QFrame.WinPanel | QFrame.Raised)
+        self.setFrameRect(QRect(10, 10, 80, 80))
+
         self.setContentsMargins(0, 0, 0, 0)
-        self.setAutoFillBackground(True)
+        # self.setAutoFillBackground(True)
         self.setSize(800, 450)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.menu.rightMenuShow)  # 开放右键策略
@@ -104,6 +107,7 @@ class myCanvas(QWidget):
         if r < 0 or g < 0 or b < 0 or r > 255 or b > 255 or g > 255:
             raise ValueError('RGB must be between 0 and 255')
         palette = QPalette()
+        # palette.setBrush(QPalette.Background, QColor(r, g, b))
         palette.setBrush(QPalette.Background, QColor(r, g, b))
         self.setPalette(palette)
 
@@ -117,3 +121,17 @@ class myCanvas(QWidget):
         self.setMaximumSize(width, height)
         self.setMinimumSize(width, height)
         self.resize(width, height)
+
+
+if __name__ == '__main__':
+    class test(QWidget):
+        def __init__(self):
+            super(test, self).__init__()
+            self.button = myCanvas()
+            self.resize(400, 300)
+
+
+    app = QApplication(sys.argv)
+    win = test()
+    win.show()
+    sys.exit(app.exec_())

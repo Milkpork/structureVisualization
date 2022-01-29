@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtWidgets import QInputDialog
+from PyQt5.QtWidgets import QInputDialog, QWidget, QApplication
 
 from myWidgets.myCanvas import myCanvas
 from myWidgets.myNode import myNode
@@ -75,3 +75,17 @@ class CanvasTest(myCanvas):
         if ac.text() == '新建':
             self.showUi().setVisible(True)
             self.nodeCount += 1
+
+
+if __name__ == '__main__':
+    class test(QWidget):
+        def __init__(self):
+            super(test, self).__init__()
+            self.button = CanvasTest()
+            self.resize(400, 300)
+
+
+    app = QApplication(sys.argv)
+    win = test()
+    win.show()
+    sys.exit(app.exec_())

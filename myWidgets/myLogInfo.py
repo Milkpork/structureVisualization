@@ -8,10 +8,13 @@ class myLogInfo(QTextEdit):
         super(myLogInfo, self).__init__()
         self.settings()
         self.fresh()
-        # self.textChanged.connect(self.a)
-        self.cursorPositionChanged.connect(self.a)
+        self.textChanged.connect(self.a)
+        # self.cursorPositionChanged.connect(self.a)
 
     def a(self):
+        if len(self.toPlainText()) == 0:
+            self.fresh()
+            return
         if self.toPlainText()[-1] == '\n':
             # self.setText(self.toPlainText()[:-1] + "\n>>> ")
             order = self.toPlainText().split('\n')[self.document().blockCount() - 2]
