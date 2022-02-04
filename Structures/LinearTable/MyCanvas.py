@@ -1,23 +1,26 @@
 """
 将Node和Canvas整合到同一个文件中
 """
-from PyQt5.QtCore import Qt, QLineF
-from PyQt5.QtGui import QCursor, QFont, QPalette, QColor, QPen, QPainter
-from PyQt5.QtWidgets import QPushButton, QFrame, QMenu, QAction, QGraphicsDropShadowEffect, QGraphicsLineItem, \
-    QGraphicsScene, QGraphicsView, QVBoxLayout, QGraphicsEllipseItem
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QCursor, QFont, QPalette, QColor
+from PyQt5.QtWidgets import QPushButton, QFrame, QMenu, QAction
 
 
 class MyNode(QPushButton):
-    def __init__(self, widget=None, text=None):
+    def __init__(self, keys=0, values=0, nextNodes=None, widget=None):
         super(MyNode, self).__init__(widget)
+
+        # 数据结构--线性表
+        self.key = keys
+        self.value = values
+        self.nextNode = nextNodes
+
         self.setStyleSheet(
-            "MyNode{border-radius:20px;border:2px solid black;background-color:#fff;}"  # 本身的样式
+            "MyNode{border-radius:40px;border:2px solid black;background-color:#fff;}"  # 本身的样式
         )
-        self.text = text
-        self.name = f"node{self.text}"  # 记录结点的名称,创建后不可修改
         self.m_flag = False
         self.canvas = widget
-        self.radius = 40  # 直径
+        self.radius = 80  # 直径
 
         self.menu = QMenu(self)
 
@@ -26,14 +29,14 @@ class MyNode(QPushButton):
 
     def mySettings(self):
         self.setSize(self.radius)  # 设置大小
-        self.setFont(QFont('楷体', int(self.radius / 2)))  # 设置字体
-        self.setText(self.text)
+        self.setFont(QFont('楷体', 40))  # 设置字体
+        self.setText(str(self.key))
         self.setContextMenuPolicy(Qt.CustomContextMenu)  # 开放右键策略
-        self.customContextMenuRequested.connect(self.rightMenuShow)
         self.rightMenu()  # 右键菜单布局
 
     def mySignalConnections(self):
         self.menu.triggered.connect(self.menuSlot)
+        self.customContextMenuRequested.connect(self.rightMenuShow)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
@@ -77,21 +80,14 @@ class MyNode(QPushButton):
         # 右键菜单
         self.menu.addAction(QAction('删除', self))
         self.menu.addSeparator()
-        self.menu.addAction(QAction('连线(头)', self))
-        self.menu.addSeparator()
-        self.menu.addAction(QAction('连线(尾)', self))
+        self.menu.addAction(QAction('连线', self))
 
     def menuSlot(self, ac):
         """
         need to be reloaded
         通过act.text()来判断选中了哪个选项
         """
-        if ac.text() == '连线(头)':
-            print('start: ' + self.name)
-            self.canvas.startNode = self.name
-        elif ac.text() == '连线(尾)':
-            print('end: ' + self.name)
-            self.canvas.endNode = self.name
+        pass
 
     def mouseDoubleClickEvent(self, event):
         """
@@ -105,56 +101,38 @@ class MyNode(QPushButton):
         pass
 
 
-class MyCanvas(QGraphicsView):
+class MyCanvas(QFrame):
     def __init__(self):
         super(MyCanvas, self).__init__()
         self.setStyleSheet(
-            "QMenu{border:1px solid rgba(20,20,20,.3);}"  # 选项背景颜色
-            "QMenu{background:rgba(255,255,255,.7);}"  # 选项背景
-
-            "QMenu::item{padding:0px 20px 0px 20px;}"  # 以文字为标准，右边距文字40像素，左边同理
-            "QMenu::item{height:40px;}"  # 显示菜单选项高度
+            "QMenu{background:LightSkyBlue; border:1px solid lightgray; border-color:green;}"  # 选项背景颜色
+            "QMenu::item{padding:0px 5px 0px 5px;}"  # 以文字为标准，右边距文字40像素，左边同理
+            "QMenu::item{height:20px;}"  # 显示菜单选项高度
+            "QMenu{background:white;}"  # 选项背景
+            "QMenu::item{margin:1px 1px 1px 1px;}"  # 每个选项四边的边界厚度，上，右，下，左
 
             "QMenu::item:selected:enabled{background:lightgray;}"
             "QMenu::item:selected:!enabled{background:transparent;}"  # 鼠标在上面时，选项背景为不透明
 
             "QMenu::separator{height:1px;}"  # 要在两个选项设置self.groupBox_menu.addSeparator()才有用
             "QMenu::separator{width:50px;}"
-            "QMenu::separator{background:#111;}"
+            "QMenu::separator{background:blue;}"
             "QMenu::separator{margin:0px 0px 0px 0px;}"
         )
         self.title = "测试用例"
         self.nodeDic = {}
         self.nodeCount = 0
-        # 连接两个按钮
-        self.startNode = None
-        self.endNode = None
 
         self.menu = QMenu(self)  # 右键菜单
-
-        # self.vlayout = QVBoxLayout(self)
-        # self.gr_scene = QGraphicsScene(self)
-        # self.gr_view = QGraphicsView(self.gr_scene)
-        # self.vlayout.addWidget(self.gr_view)
-        # self.vlayout.setContentsMargins(0, 0, 0, 0)
 
         self.myStyles()
         self.mySettings()
         self.myLayouts()
         self.mySignalConnections()
-        self.setMenuShadow()
-
-    def setMenuShadow(self):
-        # 添加阴影
-        self.effect_shadow = QGraphicsDropShadowEffect(self)
-        self.effect_shadow.setOffset(0, 0)  # 偏移
-        self.effect_shadow.setBlurRadius(0)  # 阴影半径
-        self.effect_shadow.setColor(Qt.white)  # 阴影颜色
-        self.menu.setGraphicsEffect(self.effect_shadow)  # 将设置套用到widget窗口中
 
     def mySettings(self):
         self.setMaximumSize(600, 600)
-        self.resize(600, 600)
+        self.resize(800, 800)
         self.setLineWidth(0)  # 设置外线宽度
         self.setMidLineWidth(0)  # 设置中线宽度
         self.setFrameStyle(QFrame.StyledPanel | QFrame.Plain)
@@ -177,13 +155,9 @@ class MyCanvas(QGraphicsView):
         self.menu.exec_(QCursor.pos())
 
     def addNode(self):
-        gap = 20  # 节点间的间隔
-        maxSize = (self.width() - MyNode().radius) // gap + 1  # 一行最多结点个数
-        minPadding = 5  # 防止上方溢出
-        self.nodeDic["node" + str(self.nodeCount)] = MyNode(self, str(self.nodeCount))
-        self.nodeDic["node" + str(self.nodeCount)].move(gap * (self.nodeCount % maxSize),
-                                                        minPadding + gap * (self.nodeCount // maxSize))
-        return self.nodeDic["node" + str(self.nodeCount)]
+        self.nodeDic["button" + str(self.nodeCount)] = MyNode(keys=self.nodeCount, values=self.nodeCount, widget=self)
+        self.nodeDic["button" + str(self.nodeCount)].move(20 * (self.nodeCount % 20), 20 * (self.nodeCount // 20))
+        return self.nodeDic["button" + str(self.nodeCount)]
 
     def rightMenu(self):
         """
@@ -191,27 +165,16 @@ class MyCanvas(QGraphicsView):
         """
         self.menu.addAction(QAction('新建', self))
         self.menu.addSeparator()
-        self.menu.addAction(QAction('连线', self))
+        self.menu.addAction(QAction('test', self))
 
     def menuSlot(self, ac):
         """
         need to be reloaded
         """
-        # print(ac.text())
+        print(ac.text())
         if ac.text() == '新建':
             self.addNode().setVisible(True)
             self.nodeCount += 1
-        elif ac.text() == '连线':
-            if self.startNode is not None and self.endNode is not None and self.startNode != self.endNode:
-                self.line = QGraphicsLineItem()
-                self.addItem(self.line)
-                self.line.setLine(QLineF(self.nodeDic[self.startNode].pos().x(), self.nodeDic[self.startNode].pos().y(),
-                                         self.nodeDic[self.endNode].pos().x(), self.nodeDic[self.endNode].pos().y()))
-                print(self.nodeDic[self.startNode].pos().x())
-                print(self.nodeDic[self.startNode].x())
-
-    def addLine(self, x1, y1, x2, y2):
-        pass
 
 
 if __name__ == '__main__':

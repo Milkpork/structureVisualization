@@ -3,10 +3,10 @@ from PyQt5.QtWidgets import QTextEdit, QApplication, QMainWindow
 import sys
 
 
-class myLogInfo(QTextEdit):
+class MyLogInfo(QTextEdit):
     def __init__(self):
-        super(myLogInfo, self).__init__()
-        self.settings()
+        super(MyLogInfo, self).__init__()
+        self.mySettings()
         self.fresh()
         self.textChanged.connect(self.a)
         # self.cursorPositionChanged.connect(self.a)
@@ -30,20 +30,9 @@ class myLogInfo(QTextEdit):
         self.append('>>> ')
         self.cursorToEnd()
 
-    def settings(self):
-        self.setSize(300, 500)
+    def mySettings(self):
+        self.resize(300, 600)
         self.setFont(QFont('楷体', 18))
-
-    def setSize(self, width, height):
-        """
-        用来设置画布大小大接口
-        :param width: int
-        :param height: int
-        :return: void
-        """
-        self.setMaximumSize(width, height)
-        self.setMinimumSize(width, height)
-        self.resize(width, height)
 
     def cursorToEnd(self):
         cursor = self.textCursor()
@@ -56,7 +45,8 @@ if __name__ == '__main__':
         def __init__(self):
             super(test, self).__init__()
             # self.setWindowFlags(Qt.FramelessWindowHint)
-            self.setCentralWidget(myLogInfo())
+            self.a = MyLogInfo()
+            self.a.setParent(self)
             self.resize(400, 400)
 
 
