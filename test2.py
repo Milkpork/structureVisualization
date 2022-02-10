@@ -1,63 +1,55 @@
-import sys
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
+# -*- coding: utf-8 -*-
+
+################################################################################
+## Form generated from reading UI file 'designerxMpjVL.ui'
+##
+## Created by: Qt User Interface Compiler version 5.15.2
+##
+## WARNING! All changes made in this file will be lost when recompiling UI file!
+################################################################################
+
+from PySide2.QtCore import *
+from PySide2.QtGui import *
+from PySide2.QtWidgets import *
 
 
-class RoundShadow(QWidget):
-    """圆角边框类"""
+class Ui_MainWindow(object):
+    def setupUi(self, MainWindow):
+        if not MainWindow.objectName():
+            MainWindow.setObjectName(u"MainWindow")
+        MainWindow.resize(450, 438)
+        self.centralwidget = QWidget(MainWindow)
+        self.centralwidget.setObjectName(u"centralwidget")
+        self.verticalLayout = QVBoxLayout(self.centralwidget)
+        self.verticalLayout.setObjectName(u"verticalLayout")
+        self.widget = QWidget(self.centralwidget)
+        self.widget.setObjectName(u"widget")
+        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(3)
+        sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
+        self.widget.setSizePolicy(sizePolicy)
 
-    def __init__(self, parent=None):
-        super(RoundShadow, self).__init__(parent)
-        self.border_width = 8
-        # 设置 窗口无边框和背景透明 *必须
-        self.setAttribute(Qt.WA_TranslucentBackground)
-        self.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
+        self.verticalLayout.addWidget(self.widget)
 
-    def paintEvent(self, event):
-        # 阴影
-        path = QPainterPath()
-        path.setFillRule(Qt.WindingFill)
-        pat = QPainter(self)
-        pat.setRenderHint(pat.Antialiasing)
-        pat.fillPath(path, QBrush(Qt.white))
-        color = QColor(192, 192, 192, 50)
-        for i in range(10):
-            i_path = QPainterPath()
-            i_path.setFillRule(Qt.WindingFill)
-            ref = QRectF(10 - i, 10 - i, self.width() - (10 - i) * 2, self.height() - (10 - i) * 2)
-            # i_path.addRect(ref)
-            i_path.addRoundedRect(ref, self.border_width, self.border_width)
-            color.setAlpha(int(150 - i ** 0.5 * 50))
-            pat.setPen(color)
-            pat.drawPath(i_path)
-        # 圆角
-        pat2 = QPainter(self)
-        pat2.setRenderHint(pat2.Antialiasing)  # 抗锯齿
-        pat2.setBrush(Qt.white)
-        pat2.setPen(Qt.transparent)
-        rect = self.rect()
-        rect.setLeft(9)
-        rect.setTop(9)
-        rect.setWidth(rect.width() - 9)
-        rect.setHeight(rect.height() - 9)
-        pat2.drawRoundedRect(rect, 4, 4)
+        self.widget_2 = QWidget(self.centralwidget)
+        self.widget_2.setObjectName(u"widget_2")
+        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        sizePolicy1.setHorizontalStretch(0)
+        sizePolicy1.setVerticalStretch(7)
+        sizePolicy1.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
+        self.widget_2.setSizePolicy(sizePolicy1)
 
+        self.verticalLayout.addWidget(self.widget_2)
 
-class TestWindow(RoundShadow, QWidget):
-    """测试窗口"""
+        MainWindow.setCentralWidget(self.centralwidget)
 
-    def __init__(self, parent=None):
-        super(TestWindow, self).__init__(parent)
-        self.resize(300, 300)
+        self.retranslateUi(MainWindow)
 
-    def mouseReleaseEvent(self, e):
-        self.close()
+        QMetaObject.connectSlotsByName(MainWindow)
+    # setupUi
 
+    def retranslateUi(self, MainWindow):
+        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+    # retranslateUi
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    t = TestWindow()
-    # t = RoundImage('./Asset/new_icons/close.png')
-    t.show()
-    app.exec_()

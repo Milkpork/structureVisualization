@@ -9,25 +9,27 @@ class MyLogInfo(QTextEdit):
         self.mySettings()
         self.fresh()
         self.textChanged.connect(self.a)
-        # self.cursorPositionChanged.connect(self.a)
 
     def a(self):
         if len(self.toPlainText()) == 0:
             self.fresh()
             return
         if self.toPlainText()[-1] == '\n':
-            # self.setText(self.toPlainText()[:-1] + "\n>>> ")
             order = self.toPlainText().split('\n')[self.document().blockCount() - 2]
-            self.proOrder(order.split()[1:])
+            self.proOrder(order.lstrip('>>> '))
             self.fresh()
-        self.cursorToEnd()
+        elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) < 3:
+            self.setText(self.toPlainText() + '>')
+        elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) == 3:
+            self.setText(self.toPlainText() + ' ')
+        # self.cursorToEnd()
 
     def proOrder(self, order):
         print(order)
         pass
 
     def fresh(self):
-        self.append('>>> ')
+        self.setText(self.toPlainText()+'>>> ')
         self.cursorToEnd()
 
     def mySettings(self):
@@ -44,7 +46,6 @@ if __name__ == '__main__':
     class test(QMainWindow):
         def __init__(self):
             super(test, self).__init__()
-            # self.setWindowFlags(Qt.FramelessWindowHint)
             self.a = MyLogInfo()
             self.a.setParent(self)
             self.resize(400, 400)

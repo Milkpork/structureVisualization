@@ -1,14 +1,14 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtGui import QCursor, QPalette, QColor
 from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QMenu, QApplication
 
 
 # 基类
 class TopBarButton(QPushButton):
+    radius = 20
+
     def __init__(self, window=None):
         super(TopBarButton, self).__init__()
-
-        self.radius = 20
         self.window = window
 
         self.mySettings()
@@ -29,7 +29,7 @@ class minimizeButton(TopBarButton):
     def __init__(self, window=None):
         super(minimizeButton, self).__init__(window)
         self.setStyleSheet(
-            "minimizeButton{border-image: url(../mySources/pic/minimizeButton.png);border-radius: 10px;}"
+            "minimizeButton{border-image: url(E:/structureVisualization/mySources/pic/minimizeButton.png);border-radius: 10px;}"
             "minimizeButton:hover{background-color:#999}"
         )
 
@@ -47,7 +47,7 @@ class maximizeButton(TopBarButton):
     def __init__(self, window=None):
         super(maximizeButton, self).__init__(window)
         self.setStyleSheet(
-            "maximizeButton{border-image: url(../mySources/pic/maximizeButton.png);border-radius: 10px;}"
+            "maximizeButton{border-image: url(E:/structureVisualization/mySources/pic/maximizeButton.png);border-radius: 10px;}"
             "maximizeButton:hover{background-color:#999}"
         )
 
@@ -67,7 +67,7 @@ class exitButton(TopBarButton):
     def __init__(self, window=None):
         super(exitButton, self).__init__(window)
         self.setStyleSheet(
-            "exitButton{border-image: url(../mySources/pic/exitButton.png);border-radius: 10px;}"
+            "exitButton{border-image: url(E:/structureVisualization/mySources/pic/exitButton.png);border-radius: 10px;}"
             "exitButton:hover{background-color:#999}"
         )
 
@@ -79,14 +79,14 @@ class settingButton(TopBarButton):
     def __init__(self, window=None):
         super(settingButton, self).__init__(window)
         self.setStyleSheet(
-            "settingButton{border-image: url(../mySources/pic/settingButton.png);border-radius: 10px;}"
+            "settingButton{border-image: url(E:/structureVisualization/mySources/pic/settingButton.png);border-radius: 10px;}"
             "settingButton:hover{background-color: #999;}"
         )
 
 
 class settingsMenu(QMenu):
     def __init__(self, window=None):
-        super(settingsMenu, self).__init__(window)
+        super(settingsMenu, self).__init__()
         self.setStyleSheet(
             "settingsMenu{background:LightSkyBlue; border:1px solid lightgray; border-color:green;}"  # 选项背景颜色
             "settingsMenu::item{padding:0px 5px 0px 5px;}"  # 以文字为标准，右边距文字40像素，左边同理
@@ -107,7 +107,7 @@ class settingsMenu(QMenu):
         self.myLayouts()
 
     def showMenu(self):
-        self.exec_(QCursor.pos())
+        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + 30))
 
     def myLayouts(self):
         """
@@ -122,15 +122,12 @@ class settingsMenu(QMenu):
 
 
 class MyTopBar(QWidget):
-    def __init__(self, wind=None, settingExists=True):
+    def __init__(self, wind, settingExists=True):
         """
         注意：使用本工具条会自动为窗口设置为FramelessWindowHint
         第一个参数用于设置该顶部条的窗口是哪个
         第二个参数True表示需要设置按钮，False为不显示设置按钮
         """
-        if self.window is None:
-            raise ValueError("TopBar need a parameter to state its window")
-
         super(MyTopBar, self).__init__()
         self.window = wind
         self.m_flag = False
@@ -145,10 +142,16 @@ class MyTopBar(QWidget):
         if settingExists is False:
             self.setting.setVisible(False)
 
+        self.mySettings()
         self.myLayouts()
         self.mySignalConnections()
-        self.mySettings()
         self.myStyles()
+
+    def mySettings(self):
+        self.setMaximumHeight(40)
+        self.setMinimumHeight(40)
+
+        self.window.setWindowFlags(Qt.FramelessWindowHint)  # 设置窗口为无边框样式
 
     def myLayouts(self):
         self.mainLayout.setSpacing(10)
@@ -169,12 +172,6 @@ class MyTopBar(QWidget):
         self.exitButton.clicked.connect(self.exitButton.closeWindow)
         self.settingButton.clicked.connect(self.settingsMenu.showMenu)
         self.settingsMenu.triggered.connect(self.menuSlot)
-
-    def mySettings(self):
-        self.setMaximumHeight(40)
-        self.setMinimumHeight(40)
-
-        self.window.setWindowFlags(Qt.FramelessWindowHint)  # 设置窗口为无边框样式
 
     def myStyles(self):
         self.setAutoFillBackground(True)

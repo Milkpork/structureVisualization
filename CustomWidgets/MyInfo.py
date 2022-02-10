@@ -14,7 +14,7 @@ class MyInfo(QWidget):
 
         self.mySettings()
         self.myLayouts()
-        # self.myStyles()
+        self.myStyles()
 
     def mySettings(self):
         self.titleWidget.setFont(QFont('楷体', 50))
