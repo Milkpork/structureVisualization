@@ -1,55 +1,70 @@
-# -*- coding: utf-8 -*-
+# coding:utf-8
 
-################################################################################
-## Form generated from reading UI file 'designerxMpjVL.ui'
-##
-## Created by: Qt User Interface Compiler version 5.15.2
-##
-## WARNING! All changes made in this file will be lost when recompiling UI file!
-################################################################################
-
-from PySide2.QtCore import *
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
+from PyQt5.QtCore import Qt, QLineF, QPointF
+from PyQt5.QtGui import QBrush, QPen, QPolygonF, QPainterPath
+from PyQt5.QtWidgets import QApplication, QGraphicsLineItem, QGraphicsScene, QGraphicsView
 
 
-class Ui_MainWindow(object):
-    def setupUi(self, MainWindow):
-        if not MainWindow.objectName():
-            MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(450, 438)
-        self.centralwidget = QWidget(MainWindow)
-        self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.widget = QWidget(self.centralwidget)
-        self.widget.setObjectName(u"widget")
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(3)
-        sizePolicy.setHeightForWidth(self.widget.sizePolicy().hasHeightForWidth())
-        self.widget.setSizePolicy(sizePolicy)
+class MyWidget(QGraphicsView):
+    def __init__(self):
+        super(MyWidget, self).__init__()
+        self.setFixedSize(300, 300)
+        self.setSceneRect(0, 0, 250, 250)
+        self.scene = QGraphicsScene()
+        self.setScene(self.scene)
+        self.scene.addItem(MyArrow())
 
-        self.verticalLayout.addWidget(self.widget)
 
-        self.widget_2 = QWidget(self.centralwidget)
-        self.widget_2.setObjectName(u"widget_2")
-        sizePolicy1 = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(7)
-        sizePolicy1.setHeightForWidth(self.widget_2.sizePolicy().hasHeightForWidth())
-        self.widget_2.setSizePolicy(sizePolicy1)
+class MyArrow(QGraphicsLineItem):
+    def __init__(self):
+        super(MyArrow, self).__init__()
+        self.source = QPointF(0, 250)
+        self.dest = QPointF(120, 120)
+        self.line = QLineF(self.source, self.dest)
+        self.line.setLength(self.line.length() - 20)
 
-        self.verticalLayout.addWidget(self.widget_2)
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+        # setPen
+        pen = QPen()
+        pen.setWidth(5)
+        pen.setJoinStyle(Qt.MiterJoin)
+        QPainter.setPen(pen)
 
-        MainWindow.setCentralWidget(self.centralwidget)
+        # setBrush
+        brush = QBrush()
+        brush.setColor(Qt.black)
+        brush.setStyle(Qt.SolidPattern)
+        QPainter.setBrush(brush)
 
-        self.retranslateUi(MainWindow)
+        v = self.line.unitVector()
+        v.setLength(20)
+        v.translate(QPointF(self.line.dx(), self.line.dy()))
 
-        QMetaObject.connectSlotsByName(MainWindow)
-    # setupUi
+        n = v.normalVector()
+        n.setLength(n.length() * 0.5)
+        n2 = n.normalVector().normalVector()
 
-    def retranslateUi(self, MainWindow):
-        MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
-    # retranslateUi
+        p1 = v.p2()
+        p2 = n.p2()
+        p3 = n2.p2()
 
+        # # 方法1
+        # QPainter.drawLine(self.line)
+        # QPainter.drawPolygon(p1, p2, p3)
+
+        # 方法2
+        arrow = QPolygonF([p1, p2, p3, p1])
+        path = QPainterPath()
+        path.moveTo(self.source)
+        path.lineTo(self.dest)
+        path.addPolygon(arrow)
+        QPainter.drawPath(path)
+
+
+if __name__ == '__main__':
+    import sys
+
+    app = QApplication(sys.argv)
+    w = MyWidget()
+    w.show()
+    sys.exit(app.exec_())

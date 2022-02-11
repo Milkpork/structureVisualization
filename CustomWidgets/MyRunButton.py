@@ -43,7 +43,6 @@ class MyRunButton(QComboBox):
         :param t:
         :return:
         """
-        print(t)
         pass
 
     def myLineEdit(self):
@@ -62,6 +61,10 @@ class MyRunButton(QComboBox):
             listWgt.addItem(listWgtItem)
         self.setModel(listWgt.model())
         self.setView(listWgt)
+
+    def changeItems(self,items):
+        self.items = items
+        self.myListWidget()
 
 
 class test(QWidget):

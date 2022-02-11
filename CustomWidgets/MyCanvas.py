@@ -1,7 +1,7 @@
 import sys
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QPen, QBrush, QColor, QFont, QCursor, QPainter
+from PyQt5.QtCore import Qt, QPointF, QLineF
+from PyQt5.QtGui import QPen, QBrush, QColor, QFont, QCursor, QPainter, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QApplication, QWidget, \
     QVBoxLayout, QGraphicsItem, QGraphicsSimpleTextItem, QMenu, QGraphicsLineItem
 
@@ -78,6 +78,7 @@ class MyLine(QGraphicsLineItem):
 
         self.startNode = sn  # 头节点
         self.endNode = en  # 尾结点
+
         self.startNode.lineList['outLine'].append(self)
         self.endNode.lineList['inLine'].append(self)
 
@@ -94,10 +95,58 @@ class MyLine(QGraphicsLineItem):
         self.setZValue(0)
 
     def changePos(self):
+        self.startPos = QPointF(
+            self.startNode.rect().x() + self.startNode.rect().width() // 2 + self.startNode.pos().x(),
+            self.startNode.rect().y() + self.startNode.rect().height() // 2 + self.startNode.pos().y()
+        )
+        self.endPos = QPointF(
+            self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
+            self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y()
+        )
+        self.line = QLineF(self.startPos, self.endPos)
+        self.line.setLength(self.line.length() - 25)
+
         self.setLine(self.startNode.rect().x() + self.startNode.rect().width() // 2 + self.startNode.pos().x(),
                      self.startNode.rect().y() + self.startNode.rect().height() // 2 + self.startNode.pos().y(),
                      self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
                      self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y())
+
+    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+        # setPen
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setJoinStyle(Qt.MiterJoin)
+        QPainter.setPen(pen)
+
+        # setBrush
+        brush = QBrush()
+        brush.setColor(Qt.black)
+        brush.setStyle(Qt.SolidPattern)
+        QPainter.setBrush(brush)
+
+        v = self.line.unitVector()
+        v.setLength(10)
+        v.translate(QPointF(self.line.dx(), self.line.dy()))
+
+        n = v.normalVector()
+        n.setLength(n.length() * 0.5)
+        n2 = n.normalVector().normalVector()
+
+        p1 = v.p2()
+        p2 = n.p2()
+        p3 = n2.p2()
+
+        # # 方法1
+        # QPainter.drawLine(self.line)
+        # QPainter.drawPolygon(p1, p2, p3)
+
+        # 方法2
+        arrow = QPolygonF([p1, p2, p3, p1])
+        path = QPainterPath()
+        path.moveTo(self.startPos)
+        path.lineTo(self.endPos)
+        path.addPolygon(arrow)
+        QPainter.drawPath(path)
 
 
 class MyCanvas(QWidget):

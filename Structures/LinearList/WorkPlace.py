@@ -1,11 +1,26 @@
 import sys
-from CustomWidgets import MyTopBar
 
-from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtGui import QPen, QBrush, QColor, QFont, QCursor, QPalette, QTextCursor, QPainter
-from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QApplication, QWidget, \
-    QVBoxLayout, QGraphicsItem, QGraphicsSimpleTextItem, QMenu, QGraphicsLineItem, QLabel, QTextEdit, QComboBox, \
-    QLineEdit, QListWidget, QListWidgetItem, QHBoxLayout, QSizePolicy
+from PyQt5.QtCore import Qt, QLineF, QPointF
+from PyQt5.QtGui import QCursor, QPainter, QPen, QColor, QBrush, QFont, QPolygonF, QPainterPath
+from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QGraphicsView, QMenu, \
+    QGraphicsScene, QGraphicsLineItem, QGraphicsItem, QGraphicsSimpleTextItem, QGraphicsEllipseItem
+from CustomWidgets import MyInfo, MyLogInfo, MyRunButton
+
+
+class Info_LinearList(MyInfo):
+    def __init__(self, title='test', edition='testEdition'):
+        super(Info_LinearList, self).__init__(title, edition)
+
+
+class LogInfo_LinearList(MyLogInfo):
+    def __init__(self):
+        super(LogInfo_LinearList, self).__init__()
+
+
+class RunButton_LinearList(MyRunButton):
+    def __init__(self):
+        super(RunButton_LinearList, self).__init__()
+        self.changeItems(['遍历1', '反转'])
 
 
 class MyNode(QGraphicsEllipseItem):
@@ -67,11 +82,15 @@ class MyNode(QGraphicsEllipseItem):
         self.menu.addAction('删除')
         self.menu.addSeparator()
         self.menu.addAction('连线')
+        self.menu.addSeparator()
+        self.menu.addAction('设置头节点')
 
     def menuSlot(self, ac):
         if ac.text() == '连线':
             self.canvas.setCursor(QCursor(Qt.CrossCursor))
             self.canvas.tempSt = self
+        elif ac.text() == '设置头节点':
+            self.canvas.setHeadNode(self)
 
 
 class MyLine(QGraphicsLineItem):
@@ -80,6 +99,11 @@ class MyLine(QGraphicsLineItem):
 
         self.startNode = sn  # 头节点
         self.endNode = en  # 尾结点
+
+        self.startPos = QPointF()
+        self.endPos = QPointF()
+        self.line = QLineF()
+
         self.startNode.lineList['outLine'].append(self)
         self.endNode.lineList['inLine'].append(self)
 
@@ -91,24 +115,75 @@ class MyLine(QGraphicsLineItem):
         pen.setColor(color)  # 为画笔加上颜色
         pen.setWidth(4)  # 设置画笔宽度
         self.setPen(pen)
-        self.setZValue(0)
 
         self.changePos()
+        self.setZValue(0)
 
     def changePos(self):
+        self.startPos = QPointF(
+            self.startNode.rect().x() + self.startNode.rect().width() // 2 + self.startNode.pos().x(),
+            self.startNode.rect().y() + self.startNode.rect().height() // 2 + self.startNode.pos().y()
+        )
+        self.endPos = QPointF(
+            self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
+            self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y()
+        )
+        self.line = QLineF(self.startPos, self.endPos)
+        self.line.setLength(self.line.length() - 28)
+
         self.setLine(self.startNode.rect().x() + self.startNode.rect().width() // 2 + self.startNode.pos().x(),
                      self.startNode.rect().y() + self.startNode.rect().height() // 2 + self.startNode.pos().y(),
                      self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
                      self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y())
 
+    def paint(self, QP, QStyleOptionGraphicsItem, QWidget_widget=None):
+        if self.startNode.collidesWithItem(self.endNode):  # 判断图形项是否存在相交
+            return
+        # setPen
+        pen = QPen()
+        pen.setWidth(2)
+        pen.setJoinStyle(Qt.MiterJoin)
+        QP.setPen(pen)
 
-class MyCanvas(QWidget):
+        # setBrush
+        brush = QBrush()
+        brush.setColor(Qt.black)
+        brush.setStyle(Qt.SolidPattern)
+        QP.setBrush(brush)
+
+        v = self.line.unitVector()
+        v.setLength(10)
+        v.translate(QPointF(self.line.dx(), self.line.dy()))
+
+        n = v.normalVector()
+        n.setLength(n.length() * 0.5)
+        n2 = n.normalVector().normalVector()
+
+        p1 = v.p2()
+        p2 = n.p2()
+        p3 = n2.p2()
+
+        # # 方法1
+        # QPainter.drawLine(self.line)
+        # QPainter.drawPolygon(p1, p2, p3)
+
+        # 方法2
+        arrow = QPolygonF([p1, p2, p3, p1])
+        path = QPainterPath()
+        path.moveTo(self.startPos)
+        path.lineTo(self.endPos)
+        path.addPolygon(arrow)
+        QP.drawPath(path)
+
+
+class Canvas_LinearList(QWidget):
     def __init__(self):
-        super(MyCanvas, self).__init__()
+        super(Canvas_LinearList, self).__init__()
 
         self.nodeCount = 0
         self.nodeDic = {}
         self.lineDic = {}
+        self.headNode = None
         self.tempSt = None
         self.tempEd = None
 
@@ -129,7 +204,7 @@ class MyCanvas(QWidget):
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.view.contextMenuEvent = self.rightMenuShow  # 重载函数
         self.setContextMenuPolicy(Qt.CustomContextMenu)  # 好像用不着
-        self.view.setRenderHint(QPainter.Antialiasing)  # 抗锯齿
+        self.view.setRenderHint(QPainter.Antialiasing)
 
     def mySignalConnections(self):
         self.menu.triggered.connect(self.menuSlot)
@@ -137,7 +212,7 @@ class MyCanvas(QWidget):
     def rightMenu(self):
         self.menu.addAction('新建')
         self.menu.addSeparator()
-        self.menu.addAction('test')
+        self.menu.addAction('遍历')
 
     def rightMenuShow(self, event):
         # 右击菜单
@@ -148,6 +223,8 @@ class MyCanvas(QWidget):
         if ac.text() == '新建':
             self.scene.addItem(self.addNode())
             self.nodeCount += 1
+        elif ac.text() == '遍历':
+            self.ergodic()
 
     def addNode(self):
         gap = 20  # 节点间的间隔
@@ -161,143 +238,48 @@ class MyCanvas(QWidget):
     def addLine(self):
         if self.tempSt == self.tempEd:
             return
+
+        # 线性表特点
+        if len(self.tempSt.lineList['outLine']) > 0 or len(self.tempEd.lineList['inLine']) > 0:
+            print('LinearList only has one')
+            self.setCursor(QCursor(Qt.ArrowCursor))
+            self.tempSt = None
+            self.tempEd = None
+            return
+
         self.lineDic["line" + str(self.nodeCount)] = MyLine(self.tempSt, self.tempEd)
         self.scene.addItem(self.lineDic["line" + str(self.nodeCount)])
         self.tempSt = None
         self.tempEd = None
+
         self.setCursor(QCursor(Qt.ArrowCursor))
 
+    def setHeadNode(self, node):
+        # 设置头节点接口
+        if self.headNode is None:
+            self.headNode = node
+            node.setPen(QPen(QColor(255, 165, 0), 2))
+        else:
+            self.headNode.setPen(QPen(Qt.black, 2))
+            self.headNode = node
+            node.setPen(QPen(QColor(255, 165, 0), 2))
 
-class MyInfo(QWidget):
-    def __init__(self, title='test', edition='testEdition'):
-        super(MyInfo, self).__init__()
-
-        self.titleWidget = QLabel(title)
-        self.editionWidget = QLabel(edition)
-        self.mainLayout = QVBoxLayout()
-
-        self.mySettings()
-        self.myLayouts()
-        self.myStyles()
-
-    def mySettings(self):
-        self.setMaximumHeight(120)
-        self.setMaximumWidth(200)
-        self.titleWidget.setFont(QFont('楷体', 50))
-        self.editionWidget.setFont(QFont('楷体', 14))
-        self.mainLayout.setSpacing(0)
-
-        self.titleWidget.setContentsMargins(0, 0, 0, 0)
-        self.editionWidget.setContentsMargins(50, 0, 0, 0)
-
-    def myLayouts(self):
-        self.setLayout(self.mainLayout)
-        self.mainLayout.addWidget(self.titleWidget)
-        self.mainLayout.addWidget(self.editionWidget)
-
-    def myStyles(self):
-        self.setAutoFillBackground(True)
-        palette = QPalette()
-        palette.setBrush(QPalette.Background, QColor(20, 90, 90))
-        self.setPalette(palette)
-
-
-class MyLogInfo(QTextEdit):
-    def __init__(self):
-        super(MyLogInfo, self).__init__()
-        self.mySettings()
-        self.fresh()
-        self.textChanged.connect(self.a)
-
-    def a(self):
-        if len(self.toPlainText()) == 0:
-            self.fresh()
+    def ergodic(self):
+        # 遍历
+        if self.headNode is None:
+            print("no head node!")
             return
-        if self.toPlainText()[-1] == '\n':
-            order = self.toPlainText().split('\n')[self.document().blockCount() - 2]
-            self.proOrder(order.lstrip('>>> '))
-            self.fresh()
-        elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) < 3:
-            self.setText(self.toPlainText() + '>')
-        elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) == 3:
-            self.setText(self.toPlainText() + ' ')
-        # self.cursorToEnd()
-
-    def proOrder(self, order):
-        print(order)
-        pass
-
-    def fresh(self):
-        self.setText(self.toPlainText() + '>>> ')
-        self.cursorToEnd()
-
-    def mySettings(self):
-        self.resize(300, 600)
-        self.setFont(QFont('楷体', 18))
-
-    def cursorToEnd(self):
-        cursor = self.textCursor()
-        cursor.movePosition(QTextCursor.End)
-        self.setTextCursor(cursor)
-
-
-class MyLineEdit(QLineEdit):
-    clicked = pyqtSignal(str)
-
-    def mouseReleaseEvent(self, QMouseEvent):
-        if QMouseEvent.button() == Qt.LeftButton:
-            self.clicked.emit(self.text())
-
-
-class MyRunButton(QComboBox):
-    def __init__(self):
-        super(MyRunButton, self).__init__()
-        self.setStyleSheet(
-            "MyRunButton{background-color:#ccc;}"
-            "QComboBox::drop-down {border:1px solid black;border-radius:0 5px}"
-            "MyRunButton QAbstractItemView::item{height:60px;}"  # 高度
-            "MyRunButton QAbstractItemView::item:hover{background-color:#abc;color:#333;}"
-        )
-        self.items = ['先序遍历', '中序遍历', '后序遍历', 'test']
-
-        self.myLineEdit()  # 设置文本框
-        self.myListWidget()  # 设置下拉框
-        self.mySettings()
-        self.mySignalConnections()
-
-    def mySettings(self):
-        self.resize(200, 50)
-        self.setContentsMargins(0, 0, 0, 0)
-
-    def mySignalConnections(self):
-        self.lineEdit().clicked.connect(self.a)
-        self.currentIndexChanged.connect(lambda: self.a(self.currentText()))
-
-    def a(self, t):
-        """
-        通过t.text()来判断点击哪个按钮
-        :param t:
-        :return:
-        """
-        print(t)
-        pass
-
-    def myLineEdit(self):
-        le = MyLineEdit()  # 显示框右对齐
-        le.setAlignment(Qt.AlignCenter)
-        le.setReadOnly(True)
-        self.setLineEdit(le)
-        self.lineEdit().setFont(QFont('楷体', 20))
-
-    def myListWidget(self):
-        listWgt = QListWidget()  # 列表框右对齐
-        for item in self.items:
-            listWgtItem = QListWidgetItem(item)
-            listWgtItem.setTextAlignment(Qt.AlignCenter)
-            listWgtItem.setFont(QFont('楷体', 20))
-            listWgt.addItem(listWgtItem)
-        self.setModel(listWgt.model())
-        self.setView(listWgt)
+        nowNode = self.headNode
+        while True:
+            print(nowNode.text.text())
+            if len(nowNode.lineList['outLine']) > 0:
+                nowNode = nowNode.lineList['outLine'][0].endNode
+                # 循环链表防止死循环
+                if nowNode == self.headNode:
+                    break
+            else:
+                break
+        print('endnow')
 
 
 class WorkPlace(QWidget):
@@ -307,10 +289,10 @@ class WorkPlace(QWidget):
     def __init__(self):
         super(WorkPlace, self).__init__()
         # 组件
-        self.info = MyInfo(self.title, self.textEdition)
-        self.logInfo = MyLogInfo()
-        self.runButton = MyRunButton()
-        self.canvas = MyCanvas()
+        self.info = Info_LinearList(self.title, self.textEdition)
+        self.logInfo = LogInfo_LinearList()
+        self.runButton = RunButton_LinearList()
+        self.canvas = Canvas_LinearList()
 
         self.mainWidget = QWidget()
         self.mainLayout = QHBoxLayout()  # 主布局，分割输入框
@@ -364,7 +346,7 @@ class WorkPlace(QWidget):
         self.layout3.addWidget(self.runButton)
 
     def mySettings(self):
-        self.resize(800,600)
+        self.resize(800, 600)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.layout2.setContentsMargins(0, 0, 0, 0)
         self.layout3.setContentsMargins(0, 0, 0, 0)
