@@ -10,9 +10,9 @@ class MyNode(QGraphicsEllipseItem):
     size = 30
 
     def __init__(self, a, b, t, c):  # 分别为，位置x，位置y，文字，父画板
+        super(MyNode, self).__init__(a, b, self.size, self.size)
         self.m_pos = (a, b)
         self.canvas = c
-        super(MyNode, self).__init__(self.m_pos[0], self.m_pos[1], self.size, self.size)
         # 用于记录连接该点的所有线
         self.lineList = {'inLine': [], 'outLine': []}  # 分为入边和出边
 
@@ -71,6 +71,9 @@ class MyNode(QGraphicsEllipseItem):
             self.canvas.setCursor(QCursor(Qt.CrossCursor))
             self.canvas.tempSt = self
 
+    def setText(self, t):
+        self.text.setText(t)
+
 
 class MyLine(QGraphicsLineItem):
     def __init__(self, sn=None, en=None):
@@ -111,18 +114,18 @@ class MyLine(QGraphicsLineItem):
                      self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
                      self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y())
 
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
+    def paint(self, QP, QStyleOptionGraphicsItem, QWidget_widget=None):
         # setPen
         pen = QPen()
         pen.setWidth(2)
         pen.setJoinStyle(Qt.MiterJoin)
-        QPainter.setPen(pen)
+        QP.setPen(pen)
 
         # setBrush
         brush = QBrush()
         brush.setColor(Qt.black)
         brush.setStyle(Qt.SolidPattern)
-        QPainter.setBrush(brush)
+        QP.setBrush(brush)
 
         v = self.line.unitVector()
         v.setLength(10)
@@ -146,13 +149,14 @@ class MyLine(QGraphicsLineItem):
         path.moveTo(self.startPos)
         path.lineTo(self.endPos)
         path.addPolygon(arrow)
-        QPainter.drawPath(path)
+        QP.drawPath(path)
 
 
 class MyCanvas(QWidget):
     def __init__(self):
         super(MyCanvas, self).__init__()
 
+        self.lineCount = 0
         self.nodeCount = 0
         self.nodeDic = {}
         self.lineDic = {}
@@ -208,11 +212,32 @@ class MyCanvas(QWidget):
     def addLine(self):
         if self.tempSt == self.tempEd:
             return
-        self.lineDic["line" + str(self.nodeCount)] = MyLine(self.tempSt, self.tempEd)
-        self.scene.addItem(self.lineDic["line" + str(self.nodeCount)])
+        self.lineDic["line" + str(self.lineCount)] = MyLine(self.tempSt, self.tempEd)
+        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
         self.tempSt = None
         self.tempEd = None
+        self.lineCount += 1
         self.setCursor(QCursor(Qt.ArrowCursor))
+
+    def insert(self, ls):
+        gap = 20  # 节点间的间隔
+        maxSize = (self.width() - MyNode.size) // gap + 1  # 一行最多结点个数
+        minPadding = 5  # 防止上方溢出
+        st = self.nodeCount
+        for i in ls:
+            self.nodeDic["node" + str(self.nodeCount)] = MyNode(gap * (self.nodeCount % maxSize),
+                                                                minPadding + gap * (self.nodeCount // maxSize),
+                                                                i, self)
+            self.scene.addItem(self.nodeDic["node" + str(self.nodeCount)])
+            self.nodeCount += 1
+
+        for i in range(st, self.nodeCount - 1):
+            self.lineDic["line" + str(self.lineCount)] = MyLine(self.nodeDic["node" + str(i)],
+                                                                self.nodeDic["node" + str(i + 1)])
+            self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
+            self.tempSt = None
+            self.tempEd = None
+            self.lineCount += 1
 
 
 if __name__ == '__main__':

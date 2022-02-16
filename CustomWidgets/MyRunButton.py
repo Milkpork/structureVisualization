@@ -14,35 +14,48 @@ class MyLineEdit(QLineEdit):
 
 
 class MyRunButton(QComboBox):
-    def __init__(self):
+    def __init__(self, canvas=None):
         super(MyRunButton, self).__init__()
         self.setStyleSheet(
-            "MyRunButton{background-color:#ccc;}"
-            "QComboBox::drop-down {border:1px solid black;border-radius:0 5px}"
-            "MyRunButton QAbstractItemView::item{height:60px;}"  # 高度
-            "MyRunButton QAbstractItemView::item:hover{background-color:#abc;color:#333;}"
-        )
-        self.items = ['先序遍历', '中序遍历', '后序遍历', 'test']
+            "MyRunButton{background-color:#fff;border:1px solid black;}"
 
+            "QComboBox::drop-down {border-left:1px solid black;width: 40px;margin:0;}"  # 箭头宽度需要设置按钮的边框才生效
+            "QComboBox::down-arrow {image: url(E:/structureVisualization/mySources/pic/down.png);height:30px;width:20px;}"
+            "MyRunButton QAbstractItemView{outline:0px;}"
+            "MyRunButton QAbstractItemView::item{height:60px;border-radius:2px;outline:0px;}"  # 高度
+            "MyRunButton QAbstractItemView::item:selected{background-color:#fff;color:black}"  # 选中样式
+            "MyRunButton QAbstractItemView::item:hover{background-color:#fff;color:black;border:1px solid black}"
+        )
+        self.flag = 0
+        self.items = ['test1', 'test2', 'test3', 'test4']
+        self.canvas = canvas
         self.myLineEdit()  # 设置文本框
         self.myListWidget()  # 设置下拉框
+
         self.mySettings()
         self.mySignalConnections()
+        self.myStyles()
 
     def mySettings(self):
-        self.resize(200, 50)
+        self.resize(150, 40)
+        self.setMaximumSize(150, 40)
         self.setContentsMargins(0, 0, 0, 0)
 
     def mySignalConnections(self):
-        self.lineEdit().clicked.connect(self.a)
-        self.currentIndexChanged.connect(lambda: self.a(self.currentText()))
+        self.lineEdit().clicked.connect(self.menuSlot)
+        self.currentIndexChanged.connect(lambda: self.menuSlot(self.currentText()))
 
-    def a(self, t):
+    def myStyles(self):
+        self.view().window().setWindowFlags(Qt.Popup | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
+        self.view().window().setAttribute(Qt.WA_TranslucentBackground)
+
+    def menuSlot(self, t):
         """
-        通过t.text()来判断点击哪个按钮
+        通过t来判断点击哪个按钮
         :param t:
         :return:
         """
+        print(t)
         pass
 
     def myLineEdit(self):
@@ -62,7 +75,7 @@ class MyRunButton(QComboBox):
         self.setModel(listWgt.model())
         self.setView(listWgt)
 
-    def changeItems(self,items):
+    def changeItems(self, items):
         self.items = items
         self.myListWidget()
 

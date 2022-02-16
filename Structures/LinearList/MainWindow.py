@@ -18,7 +18,7 @@ class LinearList(QMainWindow):
         self.myLayouts()
 
     def mySettings(self):
-        pass
+        self.setMinimumSize(800, 600)
 
     def myLayouts(self):
         self.setCentralWidget(self.mainWidget)

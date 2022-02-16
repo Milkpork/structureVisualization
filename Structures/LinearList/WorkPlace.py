@@ -1,9 +1,10 @@
+import re
 import sys
 
 from PyQt5.QtCore import Qt, QLineF, QPointF
 from PyQt5.QtGui import QCursor, QPainter, QPen, QColor, QBrush, QFont, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QGraphicsView, QMenu, \
-    QGraphicsScene, QGraphicsLineItem, QGraphicsItem, QGraphicsSimpleTextItem, QGraphicsEllipseItem
+    QGraphicsScene, QGraphicsLineItem, QGraphicsItem, QGraphicsSimpleTextItem, QGraphicsEllipseItem, QFrame
 from CustomWidgets import MyInfo, MyLogInfo, MyRunButton
 
 
@@ -13,23 +14,49 @@ class Info_LinearList(MyInfo):
 
 
 class LogInfo_LinearList(MyLogInfo):
-    def __init__(self):
-        super(LogInfo_LinearList, self).__init__()
+    def __init__(self, canvas):
+        super(LogInfo_LinearList, self).__init__(canvas)
+
+    def proOrder(self, order):
+        ls = order.split()
+        if ls[0] == 'insert':
+            com = re.compile(r'^\d\d?$')  # 通过正则检擦是否为两位数
+            for i in ls[1:]:
+                if com.match(i):
+                    continue
+                else:
+                    self.append('no match')
+                    break
+            else:
+                self.canvas.insert(ls[1:])  # 需要用到画板的插入函数
+        elif ls[0] == 'help':
+            self.append('1.(insert [num] [num] ... ) can insert')
+            self.append('2.more are going to append...')
+        else:
+            self.append('no such order')
+        self.append('>>> ')
 
 
 class RunButton_LinearList(MyRunButton):
-    def __init__(self):
-        super(RunButton_LinearList, self).__init__()
-        self.changeItems(['遍历1', '反转'])
+    def __init__(self, canvas):
+        super(RunButton_LinearList, self).__init__(canvas)
+        self.changeItems(['遍历', '反转'])
+
+    def menuSlot(self, t):
+        if self.flag == 0:
+            self.flag = 1
+            return
+        if t == '遍历':
+            self.canvas.ergodic()
 
 
 class MyNode(QGraphicsEllipseItem):
-    size = 30
+    size = 40
 
     def __init__(self, a, b, t, c):  # 分别为，位置x，位置y，文字，父画板
+        super(MyNode, self).__init__(a, b, self.size, self.size)
         self.m_pos = (a, b)
         self.canvas = c
-        super(MyNode, self).__init__(self.m_pos[0], self.m_pos[1], self.size, self.size)
         # 用于记录连接该点的所有线
         self.lineList = {'inLine': [], 'outLine': []}  # 分为入边和出边
 
@@ -53,7 +80,8 @@ class MyNode(QGraphicsEllipseItem):
         self.setBrush(QBrush(QColor(200, 200, 200)))  # 内容填充
 
     def myLayouts(self):
-        self.text.setPos(self.m_pos[0] + self.size / 2 - 5, self.m_pos[1] + self.size / 2 - 8)  # 设置文字在中间的位置
+        self.text.setPos(self.m_pos[0] + self.size // 3 - (len(self.text.text())-1) * (self.size*0.2),
+                         self.m_pos[1] + self.size // 5)  # 设置文字在中间的位置
 
     def mySignalConnections(self):
         self.menu.triggered.connect(self.menuSlot)
@@ -92,6 +120,9 @@ class MyNode(QGraphicsEllipseItem):
         elif ac.text() == '设置头节点':
             self.canvas.setHeadNode(self)
 
+    def setText(self, t):
+        self.text.setText(t)
+
 
 class MyLine(QGraphicsLineItem):
     def __init__(self, sn=None, en=None):
@@ -129,7 +160,7 @@ class MyLine(QGraphicsLineItem):
             self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y()
         )
         self.line = QLineF(self.startPos, self.endPos)
-        self.line.setLength(self.line.length() - 28)
+        self.line.setLength(self.line.length() - 33)
 
         self.setLine(self.startNode.rect().x() + self.startNode.rect().width() // 2 + self.startNode.pos().x(),
                      self.startNode.rect().y() + self.startNode.rect().height() // 2 + self.startNode.pos().y(),
@@ -175,11 +206,17 @@ class MyLine(QGraphicsLineItem):
         path.addPolygon(arrow)
         QP.drawPath(path)
 
+    def mouseDoubleClickEvent(self, event):
+        print(223)
 
-class Canvas_LinearList(QWidget):
+
+class Canvas_LinearList(QFrame):
     def __init__(self):
         super(Canvas_LinearList, self).__init__()
-
+        self.setStyleSheet(
+            "QFrame{border-radius:5px;border:1px solid;}"
+        )
+        self.lineCount = 0
         self.nodeCount = 0
         self.nodeDic = {}
         self.lineDic = {}
@@ -200,11 +237,18 @@ class Canvas_LinearList(QWidget):
     def mySettings(self):
         self.rightMenu()  # 右击菜单
         self.resize(400, 400)
+        self.setLineWidth(0)  # 设置外线宽度
+        self.setMidLineWidth(0)  # 设置中线宽度
+        self.setFrameShadow(QFrame.Plain)  # 设置阴影效果：凸起
+        self.setFrameShape(QFrame.StyledPanel)  # 设置图形为：Box
+        # self.setFrameRect(QRect(10, 10, 80, 80))  # 这是边框
         self.view.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # 取消居中
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.view.contextMenuEvent = self.rightMenuShow  # 重载函数
         self.setContextMenuPolicy(Qt.CustomContextMenu)  # 好像用不着
         self.view.setRenderHint(QPainter.Antialiasing)
+        self.view.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.view.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
     def mySignalConnections(self):
         self.menu.triggered.connect(self.menuSlot)
@@ -247,10 +291,11 @@ class Canvas_LinearList(QWidget):
             self.tempEd = None
             return
 
-        self.lineDic["line" + str(self.nodeCount)] = MyLine(self.tempSt, self.tempEd)
-        self.scene.addItem(self.lineDic["line" + str(self.nodeCount)])
+        self.lineDic["line" + str(self.lineCount)] = MyLine(self.tempSt, self.tempEd)
+        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
         self.tempSt = None
         self.tempEd = None
+        self.lineCount += 1
 
         self.setCursor(QCursor(Qt.ArrowCursor))
 
@@ -281,18 +326,40 @@ class Canvas_LinearList(QWidget):
                 break
         print('endnow')
 
+    def insert(self, ls):
+        gap = 20  # 节点间的间隔
+        maxSize = (self.width() - MyNode.size) // gap + 1  # 一行最多结点个数
+        minPadding = 5  # 防止上方溢出
+        st = self.nodeCount
+        for i in ls:
+            self.nodeDic["node" + str(self.nodeCount)] = MyNode(gap * (self.nodeCount % maxSize),
+                                                                minPadding + gap * (self.nodeCount // maxSize),
+                                                                i, self)
+            self.scene.addItem(self.nodeDic["node" + str(self.nodeCount)])
+            self.nodeCount += 1
+
+        for i in range(st, self.nodeCount - 1):
+            self.lineDic["line" + str(self.lineCount)] = MyLine(self.nodeDic["node" + str(i)],
+                                                                self.nodeDic["node" + str(i + 1)])
+            self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
+            self.tempSt = None
+            self.tempEd = None
+            self.lineCount += 1
+
 
 class WorkPlace(QWidget):
-    title = '测试'
-    textEdition = '线性表'
 
-    def __init__(self):
+    def __init__(self, t='Canvas', te='线性表'):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
+
+        self.title = t
+        self.textEdition = te
+
         # 组件
         self.info = Info_LinearList(self.title, self.textEdition)
-        self.logInfo = LogInfo_LinearList()
-        self.runButton = RunButton_LinearList()
         self.canvas = Canvas_LinearList()
+        self.runButton = RunButton_LinearList(self.canvas)
+        self.logInfo = LogInfo_LinearList(self.canvas)
 
         self.mainWidget = QWidget()
         self.mainLayout = QHBoxLayout()  # 主布局，分割输入框
@@ -313,6 +380,7 @@ class WorkPlace(QWidget):
         self.mainLayout.addWidget(self.myWidget2)
         self.myWidget2.setLayout(self.layout2)
         self.mainLayout.addWidget(self.logInfo)
+        self.mainLayout.setSpacing(30)
 
         sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
         sizePolicy.setHorizontalStretch(7)
@@ -329,6 +397,7 @@ class WorkPlace(QWidget):
         self.layout2.addWidget(self.myWidget3)
         self.myWidget3.setLayout(self.layout3)
         self.layout2.addWidget(self.canvas)
+        self.layout2.setSpacing(20)
 
         sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
         sizePolicy.setHorizontalStretch(0)
@@ -348,12 +417,12 @@ class WorkPlace(QWidget):
     def mySettings(self):
         self.resize(800, 600)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.layout2.setContentsMargins(0, 0, 0, 0)
+        self.layout2.setContentsMargins(20, 0, 0, 20)
         self.layout3.setContentsMargins(0, 0, 0, 0)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = WorkPlace()
+    win = WorkPlace('canvas', 'LinearList')
     win.show()
     sys.exit(app.exec_())

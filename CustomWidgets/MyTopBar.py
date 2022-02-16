@@ -196,7 +196,6 @@ class MyTopBar(QWidget):
                                  QCursor().pos().y() - self.height() // 2)
                 self.m_Position = QMouseEvent.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
             else:
-                pass
                 self.window.move(QMouseEvent.globalPos() - self.m_Position)  # 更改窗口位置
             QMouseEvent.accept()
 
