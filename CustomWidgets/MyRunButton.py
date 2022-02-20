@@ -9,19 +9,36 @@ class MyLineEdit(QLineEdit):
     clicked = pyqtSignal(str)
 
     def mouseReleaseEvent(self, QMouseEvent):
-        if QMouseEvent.button() == Qt.LeftButton:
-            self.clicked.emit(self.text())
+        # if QMouseEvent.button() == Qt.LeftButton:
+        self.setStyleSheet(
+            "QLineEdit{background-color:transparent;}"
+        )
+        self.clicked.emit(self.text())
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        self.setStyleSheet(
+            "QLineEdit{background-color:rgba(200,200,200,0.7)}"
+        )
+
+    def mouseDoubleClickEvent(self, QMouseEvent):
+        super().mousePressEvent(QMouseEvent)
+        self.setStyleSheet(
+            "QLineEdit{background-color:rgba(200,200,200,0.7)}"
+        )
+
+    def contextMenuEvent(self, QContext):
+        pass
 
 
 class MyRunButton(QComboBox):
     def __init__(self, canvas=None):
         super(MyRunButton, self).__init__()
         self.setStyleSheet(
-            "MyRunButton{background-color:#fff;border:1px solid black;}"
-
-            "QComboBox::drop-down {border-left:1px solid black;width: 40px;margin:0;}"  # 箭头宽度需要设置按钮的边框才生效
-            "QComboBox::down-arrow {image: url(E:/structureVisualization/mySources/pic/down.png);height:30px;width:20px;}"
-            "MyRunButton QAbstractItemView{outline:0px;}"
+            "MyRunButton{background-color:transparent;border:1px solid black;border-radius:5px}"
+            "MyRunButton::drop-down {border-left:1px solid black;width: 40px;margin:0;}"  # 箭头宽度需要设置按钮的边框才生效
+            "MyRunButton::down-arrow {image: url(E:/structureVisualization/mySources/pic/down.png);height:30px;width:20px;}"
+            "MyRunButton QAbstractItemView{outline:0px;border:2px solid black;}"
             "MyRunButton QAbstractItemView::item{height:60px;border-radius:2px;outline:0px;}"  # 高度
             "MyRunButton QAbstractItemView::item:selected{background-color:#fff;color:black}"  # 选中样式
             "MyRunButton QAbstractItemView::item:hover{background-color:#fff;color:black;border:1px solid black}"

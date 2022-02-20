@@ -1,70 +1,41 @@
-# coding:utf-8
-
-from PyQt5.QtCore import Qt, QLineF, QPointF
-from PyQt5.QtGui import QBrush, QPen, QPolygonF, QPainterPath
-from PyQt5.QtWidgets import QApplication, QGraphicsLineItem, QGraphicsScene, QGraphicsView
+import sys
+from PyQt5.Qt import *
 
 
-class MyWidget(QGraphicsView):
+class Window(QWidget):
     def __init__(self):
-        super(MyWidget, self).__init__()
-        self.setFixedSize(300, 300)
-        self.setSceneRect(0, 0, 250, 250)
-        self.scene = QGraphicsScene()
-        self.setScene(self.scene)
-        self.scene.addItem(MyArrow())
+        super().__init__()
+        self.setWindowTitle('动画')
+        self.resize(500, 500)
+        self.move(400, 200)
+        self.btn = QPushButton(self)
+        self.init_ui()
+
+    def init_ui(self):
+        self.btn.resize(100, 100)
+        self.btn.move(0, 0)
+        self.btn.setStyleSheet('QPushButton{border: none; background: pink;}')
+
+        # 1.定义一个动画
+        animation = QPropertyAnimation(self)
+        animation.setTargetObject(self.btn)
+        animation.setPropertyName(b'pos')
+        # 使用另外一种构造函数方式创建
+        # animation = QPropertyAnimation(self.btn, b'pos', self)
+
+        # 2.设置属性值
+        animation.setStartValue(QPoint(0, 0))
+        animation.setEndValue(QPoint(400, 400))
+
+        # 3.设置时长
+        animation.setDuration(3000)
+
+        # 4.启动动画
+        animation.start()
 
 
-class MyArrow(QGraphicsLineItem):
-    def __init__(self):
-        super(MyArrow, self).__init__()
-        self.source = QPointF(0, 250)
-        self.dest = QPointF(120, 120)
-        self.line = QLineF(self.source, self.dest)
-        self.line.setLength(self.line.length() - 20)
-
-    def paint(self, QPainter, QStyleOptionGraphicsItem, QWidget_widget=None):
-        # setPen
-        pen = QPen()
-        pen.setWidth(5)
-        pen.setJoinStyle(Qt.MiterJoin)
-        QPainter.setPen(pen)
-
-        # setBrush
-        brush = QBrush()
-        brush.setColor(Qt.black)
-        brush.setStyle(Qt.SolidPattern)
-        QPainter.setBrush(brush)
-
-        v = self.line.unitVector()
-        v.setLength(20)
-        v.translate(QPointF(self.line.dx(), self.line.dy()))
-
-        n = v.normalVector()
-        n.setLength(n.length() * 0.5)
-        n2 = n.normalVector().normalVector()
-
-        p1 = v.p2()
-        p2 = n.p2()
-        p3 = n2.p2()
-
-        # # 方法1
-        # QPainter.drawLine(self.line)
-        # QPainter.drawPolygon(p1, p2, p3)
-
-        # 方法2
-        arrow = QPolygonF([p1, p2, p3, p1])
-        path = QPainterPath()
-        path.moveTo(self.source)
-        path.lineTo(self.dest)
-        path.addPolygon(arrow)
-        QPainter.drawPath(path)
-
-
-if __name__ == '__main__':
-    import sys
-
+if __name__ == "__main__":
     app = QApplication(sys.argv)
-    w = MyWidget()
-    w.show()
+    window = Window()
+    window.show()
     sys.exit(app.exec_())

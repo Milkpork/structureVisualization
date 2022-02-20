@@ -7,8 +7,8 @@ class MyLogInfo(QTextEdit):
     def __init__(self, canvas=None):
         super(MyLogInfo, self).__init__()
         self.setStyleSheet(
-            "QTextEdit{border:2px solid black;margin:30px 20px 20px 5px}"
-            "QTextEdit:focus {border: 2px solid gray;}"
+            "QTextEdit{border:2px solid gray;margin:30px 20px 20px 5px;background-color:transparent;border-radius:5px;}"
+            "QTextEdit:focus {border: 2px solid black;}"
         )
 
         self.canvas = canvas
@@ -20,6 +20,7 @@ class MyLogInfo(QTextEdit):
         self.fresh()
         self.resize(300, 600)
         self.setFont(QFont('楷体', 12))
+        self.setMaximumWidth(300)
         # self.setReadOnly(True)
 
     def mySignalConnections(self):
@@ -36,6 +37,8 @@ class MyLogInfo(QTextEdit):
             self.setText(self.toPlainText() + '>')
         elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) == 3:
             self.setText(self.toPlainText() + ' ')
+        self.cursorToEnd()
+
 
     def proOrder(self, order):
         print(order)
