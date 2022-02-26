@@ -1,7 +1,7 @@
 import re
 import sys
 
-from PyQt5.QtCore import Qt, QLineF, QPointF, QPropertyAnimation, pyqtProperty
+from PyQt5.QtCore import Qt, QLineF, QPointF, QTimeLine
 from PyQt5.QtGui import QCursor, QPainter, QPen, QColor, QBrush, QFont, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy, QGraphicsView, QMenu, \
     QGraphicsScene, QGraphicsLineItem, QGraphicsItem, QGraphicsSimpleTextItem, QGraphicsEllipseItem, QFrame
@@ -30,11 +30,10 @@ class LogInfo_LinearList(MyLogInfo):
             else:
                 self.canvas.insert(ls[1:])  # 需要用到画板的插入函数
         elif ls[0] == 'help':
-            self.append('1.(insert [num] [num] ... ) can insert')
-            self.append('2.more are going to append...')
+            self.append('\n1.(insert [num] [num] ... ) can insert')
+            self.append('\n2.more are going to append...')
         else:
-            self.append('no such order')
-        self.append('>>> ')
+            self.append('\nno such order')
 
 
 class RunButton_LinearList(MyRunButton):
@@ -60,7 +59,6 @@ class MyNode(QGraphicsEllipseItem):
         self.canvas = c
         # 用于记录连接该点的所有线
         self.lineList = {'inLine': [], 'outLine': []}  # 分为入边和出边
-
         self.text = QGraphicsSimpleTextItem(t)
         self.menu = QMenu()
 
@@ -100,6 +98,7 @@ class MyNode(QGraphicsEllipseItem):
         for i in self.lineList:
             for j in self.lineList[i]:
                 j.changePos()
+        self.canvas.view.viewport().update()
 
     def contextMenuEvent(self, event):
         super().contextMenuEvent(event)
@@ -142,6 +141,14 @@ class MyNode(QGraphicsEllipseItem):
             self.lineList['outLine'][0].endNode.lineList['inLine'] = []
         self.canvas.scene.removeItem(self)  # 删除自身
 
+    def myAnimation(self, frame):
+        self.setPen(QPen(Qt.blue, 2))  # 边框
+        # self.setRect(QRectF(self.rect().x(),
+        #                     self.rect().y(),
+        #                     self.size+20,
+        #                     self.size+20))
+        self.setScale(1.2)
+
 
 class MyLine(QGraphicsLineItem):
     def __init__(self, sn=None, en=None, c=None, n=None):
@@ -168,12 +175,6 @@ class MyLine(QGraphicsLineItem):
         self.menu.setWindowFlags(
             self.menu.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)  # 设置无阴影背景
 
-        pen = QPen()  # 建立画笔
-        color = QColor(10, 10, 10)  # 建立一个色彩对象
-        pen.setColor(color)  # 为画笔加上颜色
-        pen.setWidth(4)  # 设置画笔宽度
-        self.setPen(pen)
-
         self.changePos()
         self.setZValue(0)
 
@@ -185,8 +186,10 @@ class MyLine(QGraphicsLineItem):
             return
         # setPen
         pen = QPen()
+        pen.setColor(Qt.black)
         pen.setWidth(2)
         pen.setJoinStyle(Qt.MiterJoin)
+        # pen.setStyle(Qt.DotLine)
         QP.setPen(pen)
 
         # setBrush
@@ -255,6 +258,9 @@ class MyLine(QGraphicsLineItem):
 
     def delete(self):
         pass
+
+    def myAnimation(self, frame):
+        print(self)
 
 
 class MyView(QGraphicsView):
@@ -390,18 +396,44 @@ class Canvas_LinearList(QFrame):
         if self.headNode is None:  # 没有头节点
             print("no head node!")
             return
+
         nowNode = self.headNode
+        nodeList = []
+        lineList = []
         while True:
             # 插入动画
             print(nowNode.text.text())
+            nodeList.append(nowNode)
             if len(nowNode.lineList['outLine']) > 0:
+                lineList.append(nowNode.lineList['outLine'][0])
                 nowNode = nowNode.lineList['outLine'][0].endNode
                 # 循环链表防止死循环
                 if nowNode == self.headNode:
                     break
             else:
                 break
-        print('endnow')
+        singleTime = 1000  # 每一个动画持续一秒
+        singleFrame = 5  # 每一个动画有5帧
+        nums = (len(nodeList) + len(lineList))  # 有nums个需要执行的物体
+        allTime = singleTime * nums
+        allFrame = singleFrame * nums
+        timeline = QTimeLine(allTime, self)  # 实例化一个时间轴，持续时间为5秒
+        timeline.setFrameRange(0, allFrame)  # 设置帧率范围，该值表示在规定的时间内将要执行多少帧
+        timeline.frameChanged.connect(
+            lambda frame: self.ergodicAnimation(frame - 1, nodeList, lineList, singleFrame, allFrame))  # 帧数变化时发出信号
+        timeline.setLoopCount(1)  # 传入0代表无限循环运行.传入正整数会运行相应次数，传入负数不运行
+        timeline.start()  # 启动动画
+
+    def ergodicAnimation(self, frame, nodeList, lineList, singleFrame, allframe):
+        times = frame // singleFrame
+        flags = frame % singleFrame
+        if times % 2 == 0 and flags == 0:
+            # 偶数为结点
+            nodeList[times // 2].myAnimation(frame)
+        elif times % 2 == 1 and flags == 0:
+            lineList[(times - 1) // 2].myAnimation(frame)
+        if frame == allframe - 1:
+            self.clear(nodeList, lineList)
 
     def insert(self, ls):
         gap = 20  # 节点间的间隔
@@ -424,22 +456,25 @@ class Canvas_LinearList(QFrame):
             self.tempEd = None
             self.lineCount += 1
 
-    def clear(self):
+    def clear(self, nodeList=None, lineList=None):
+        # 恢复最初样式
+        if lineList is None:
+            lineList = []
+        if nodeList is None:
+            nodeList = []
         self.setCursor(QCursor(Qt.ArrowCursor))
         self.tempSt = None
         self.tempEd = None
-        return
-
-    # 获取属性值
-    @pyqtProperty(QColor)
-    def mycolor(self):
-        return self.color
-
-    # 设置属性值，也可以写@mycolor.write
-    @mycolor.setter
-    def mycolor(self, value):
-        self.color = value
-        self.update()
+        for node in nodeList:
+            node.setPen(QPen(Qt.black, 2))
+            node.setScale(1)
+        for line in lineList:
+            pen = QPen()
+            pen.setColor(Qt.black)
+            pen.setWidth(2)
+            line.setPen(pen)
+        if self.headNode is not None:
+            self.headNode.setPen(QPen(QColor(255, 165, 0), 2))
 
 
 class WorkPlace(QWidget):

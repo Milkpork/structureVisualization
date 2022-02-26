@@ -1,13 +1,15 @@
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QCursor, QPalette, QColor
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QMenu, QApplication
+from PyQt5.QtGui import QCursor, QPalette, QColor, QMouseEvent, QFont
+from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QMenu, QApplication, QMainWindow, QAction
+from CustomWidgets.Fundsettings import Fundsettings
 
 
-# 基类
+# 按钮基类
 class TopBarButton(QPushButton):
-    radius = 20
+    radius = 20  # 半径
+    hover_color = "#999"  # hover的颜色
 
-    def __init__(self, window=None):
+    def __init__(self, window: QMainWindow = None):
         super(TopBarButton, self).__init__()
         self.window = window
 
@@ -26,33 +28,32 @@ class minimizeButton(TopBarButton):
     初始化时需要传入参数为哪个窗口
     """
 
-    def __init__(self, window=None):
+    def __init__(self, window: QMainWindow = None):
         super(minimizeButton, self).__init__(window)
         self.setStyleSheet(
-            "minimizeButton{border-image: url(E:/structureVisualization/mySources/pic/minimizeButton.png);border-radius: 10px;}"
-            "minimizeButton:hover{background-color:#999}"
+            "minimizeButton{border-image: url(%s/pic/minimizeButton.png);border-radius: %dpx;}"
+            "minimizeButton:hover{background-color:%s}" % (
+                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
         )
+        self.clicked.connect(self.minimize)
 
+    # 最小化窗口
     def minimize(self):
-        # 将窗口最小化
         self.window.setWindowState(Qt.WindowMinimized)
 
 
 class maximizeButton(TopBarButton):
-    """
-    最大化按钮
-    注意要判断是否最大以此来修改图像
-    """
-
-    def __init__(self, window=None):
+    def __init__(self, window: QMainWindow = None):
         super(maximizeButton, self).__init__(window)
         self.setStyleSheet(
-            "maximizeButton{border-image: url(E:/structureVisualization/mySources/pic/maximizeButton.png);border-radius: 10px;}"
-            "maximizeButton:hover{background-color:#999}"
+            "maximizeButton{border-image: url(%s/pic/maximizeButton.png);border-radius: %dpx;}"
+            "maximizeButton:hover{background-color:%s}" % (
+                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
         )
+        self.clicked.connect(self.maximize)
 
+    # 将窗口最大化
     def maximize(self):
-        # 将窗口最大化
         if self.window.isFullScreen():
             self.window.showNormal()
         else:
@@ -60,59 +61,67 @@ class maximizeButton(TopBarButton):
 
 
 class exitButton(TopBarButton):
-    """
-    退出按钮
-    """
-
-    def __init__(self, window=None):
+    def __init__(self, window: QMainWindow = None):
         super(exitButton, self).__init__(window)
         self.setStyleSheet(
-            "exitButton{border-image: url(E:/structureVisualization/mySources/pic/exitButton.png);border-radius: 10px;}"
-            "exitButton:hover{background-color:#999}"
+            "exitButton{border-image: url(%s/pic/exitButton.png);border-radius: %dpx;}"
+            "exitButton:hover{background-color:%s}" % (
+                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
         )
+        self.clicked.connect(self.closeWindow)
 
+    # 关闭窗口
     def closeWindow(self):
         self.window.close()
 
 
+# 设置按钮
 class settingButton(TopBarButton):
-    def __init__(self, window=None):
+    def __init__(self, window: QMainWindow = None):
         super(settingButton, self).__init__(window)
         self.setStyleSheet(
-            "settingButton{border-image: url(E:/structureVisualization/mySources/pic/settingButton.png);border-radius: 10px;}"
-            "settingButton:hover{background-color: #999;}"
+            "settingButton{border-image: url(%s/pic/settingButton.png);border-radius: %dpx;}"
+            "settingButton:hover{background-color: %s;}" % (
+                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
         )
 
 
+# 设置菜单
 class settingsMenu(QMenu):
-    def __init__(self, window=None):
+    font_size = 12
+
+    def __init__(self, window: QMainWindow = None):
         super(settingsMenu, self).__init__()
         self.setStyleSheet(
-            "settingsMenu{background:LightSkyBlue; border:1px solid lightgray; border-color:green;}"  # 选项背景颜色
-            "settingsMenu::item{padding:0px 5px 0px 5px;}"  # 以文字为标准，右边距文字40像素，左边同理
-            "settingsMenu::item{height:20px;}"  # 显示菜单选项高度
-            "settingsMenu::item{background:white;}"  # 选项背景
-            "settingsMenu::item{margin:1px 1px 1px 1px;}"  # 每个选项四边的边界厚度，上，右，下，左
+            "settingsMenu{border:1px solid black;}"
+            "settingsMenu::item{padding:0px 5px 0px 5px;}"
+            "settingsMenu::item{height:20px;}"
+            "settingsMenu::item{background:white;}"
+            "settingsMenu::item:selected:enabled{background-color:rgba(200,200,200,.7);}"
 
-            "settingsMenu::item:selected:enabled{background:lightgray;}"
-
-            "settingsMenu::item:selected:!enabled{background:transparent;}"  # 鼠标在上面时，选项背景为不透明
-
-            "settingsMenu::separator{height:1px;}"  # 要在两个选项设置self.groupBox_menu.addSeparator()才有用
-            "settingsMenu::separator{width:50px;}"
-            "settingsMenu::separator{background:blue;}"
-            "settingsMenu::separator{margin:0px 0px 0px 0px;}"
-        )  # 丑的一比，暂时用着
+            "settingsMenu::separator{height:1px;}"
+            "settingsMenu::separator{background:black;}"
+            "settingsMenu::separator{margin:0px 8px 0px 8px;}"
+        )
         self.window = window
-        self.myLayouts()
 
+        self.mySettings()
+        self.mySignalConnections()
+        self.myMenu()
+
+    def mySettings(self):
+        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)  # 设置无阴影背景
+        self.setFont(QFont(Fundsettings.font_family, self.font_size))
+
+    def mySignalConnections(self):
+        self.triggered.connect(self.menuSlot)
+
+    # 展示菜单
     def showMenu(self):
-        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + 30))
+        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + 40))  # 在setting按钮下方展示
 
-    def myLayouts(self):
-        """
-        可修改，修改的是setting按钮里面的菜单
-        """
+    # 菜单内的选项
+    def myMenu(self):
         self.addAction('新建')
         self.addSeparator()
         self.addAction('保存')
@@ -120,9 +129,17 @@ class settingsMenu(QMenu):
         self.addSeparator()
         self.addAction('设置')
 
+    # 菜单对应的槽函数（事件）
+    def menuSlot(self, ac: QAction):
+        pass
 
+
+# 顶部条(主类)
 class MyTopBar(QWidget):
-    def __init__(self, wind, settingExists=True):
+    bc_color = (90, 90, 90)  # 背景颜色
+    fix_height = 40  # 固定高度
+
+    def __init__(self, wind: QMainWindow, settingExists: bool = True):
         """
         注意：使用本工具条会自动为窗口设置为FramelessWindowHint
         第一个参数用于设置该顶部条的窗口是哪个
@@ -131,6 +148,7 @@ class MyTopBar(QWidget):
         super(MyTopBar, self).__init__()
         self.window = wind
         self.m_flag = False
+        self.m_Position = None
 
         self.mainLayout = QHBoxLayout()
         self.miniButton = minimizeButton(self.window)
@@ -148,10 +166,8 @@ class MyTopBar(QWidget):
         self.myStyles()
 
     def mySettings(self):
-        self.setMaximumHeight(40)
-        self.setMinimumHeight(40)
-
-        self.window.setWindowFlags(Qt.FramelessWindowHint)  # 设置窗口为无边框样式
+        # 设置固定高度
+        self.setFixedHeight(self.fix_height)
 
     def myLayouts(self):
         self.mainLayout.setSpacing(10)
@@ -167,26 +183,27 @@ class MyTopBar(QWidget):
         self.mainLayout.addWidget(self.exitButton)
 
     def mySignalConnections(self):
-        self.miniButton.clicked.connect(self.miniButton.minimize)
-        self.maxiButton.clicked.connect(self.maxiButton.maximize)
-        self.exitButton.clicked.connect(self.exitButton.closeWindow)
         self.settingButton.clicked.connect(self.settingsMenu.showMenu)
-        self.settingsMenu.triggered.connect(self.menuSlot)
 
     def myStyles(self):
+        # 设置背景颜色
         self.setAutoFillBackground(True)
         palette = QPalette()
-        palette.setBrush(QPalette.Background, QColor(90, 90, 90))
+        palette.setBrush(QPalette.Background, QColor(*self.bc_color))
         self.setPalette(palette)
 
-    def mousePressEvent(self, event):
+        # 设置窗口为无边框样式
+        self.window.setWindowFlags(Qt.FramelessWindowHint)
+
+    # press+move+release三者构成窗口可拖拽
+    def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.LeftButton:
             self.m_flag = True
             self.m_Position = event.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
             event.accept()
             self.setCursor(QCursor(Qt.OpenHandCursor))  # 更改鼠标图标
 
-    def mouseMoveEvent(self, QMouseEvent):
+    def mouseMoveEvent(self, event: QMouseEvent):
         if Qt.LeftButton and self.m_flag:
             if self.window.isFullScreen():
                 self.window.showNormal()
@@ -194,29 +211,21 @@ class MyTopBar(QWidget):
                 flag = QCursor().pos().x() / desktop.width()  # 系数
                 self.window.move(int(QCursor().pos().x() - self.window.width() * flag),
                                  QCursor().pos().y() - self.height() // 2)
-                self.m_Position = QMouseEvent.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
+                self.m_Position = event.globalPos() - self.window.pos()  # 获取鼠标相对窗口的位置
             else:
-                self.window.move(QMouseEvent.globalPos() - self.m_Position)  # 更改窗口位置
-            QMouseEvent.accept()
+                self.window.move(event.globalPos() - self.m_Position)  # 更改窗口位置
+            event.accept()
 
-    def mouseReleaseEvent(self, QMouseEvent):
+    def mouseReleaseEvent(self, event: QMouseEvent):
         self.m_flag = False
         self.setCursor(QCursor(Qt.ArrowCursor))
 
+    # 双击改变状态
     def mouseDoubleClickEvent(self, event):
         if self.window.isFullScreen():
             self.window.showNormal()
         else:
             self.window.setWindowState(Qt.WindowFullScreen)  # 全屏
-
-    def menuSlot(self, ac):
-        """
-        need to be reloaded
-        顶部菜单,通过ac.text()来发送选项
-        :return:
-        """
-        print(ac.text())
-        pass
 
 
 if __name__ == '__main__':

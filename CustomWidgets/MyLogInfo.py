@@ -1,57 +1,78 @@
-from PyQt5.QtGui import QFont, QTextCursor
-from PyQt5.QtWidgets import QTextEdit, QApplication, QMainWindow, QFrame
 import sys
+
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QTextCursor, QKeyEvent
+from PyQt5.QtWidgets import QTextEdit, QApplication, QMainWindow, QWidget
+from CustomWidgets.Fundsettings import Fundsettings
 
 
 class MyLogInfo(QTextEdit):
-    def __init__(self, canvas=None):
+    font_size = 12  # 字体大小
+
+    def __init__(self, canvas: QWidget = None):
         super(MyLogInfo, self).__init__()
         self.setStyleSheet(
             "QTextEdit{border:2px solid gray;margin:30px 20px 20px 5px;background-color:transparent;border-radius:5px;}"
             "QTextEdit:focus {border: 2px solid black;}"
         )
-
+        self.backNum = 0
         self.canvas = canvas
 
-        self.mySignalConnections()
         self.mySettings()
 
     def mySettings(self):
-        self.fresh()
         self.resize(300, 600)
-        self.setFont(QFont('楷体', 12))
         self.setMaximumWidth(300)
-        # self.setReadOnly(True)
+        self.setFont(QFont(Fundsettings.font_family, self.font_size))
 
-    def mySignalConnections(self):
-        self.textChanged.connect(self.textchange)
-
-    def textchange(self):
-        if len(self.toPlainText()) == 0:
-            self.fresh()
-            return
-        if self.toPlainText()[-1] == '\n':
-            order = self.toPlainText().split('\n')[self.document().blockCount() - 2]
-            self.proOrder(order.lstrip('>>> '))
-        elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) < 3:
-            self.setText(self.toPlainText() + '>')
-        elif len(self.toPlainText().split('\n')[self.document().blockCount() - 1]) == 3:
-            self.setText(self.toPlainText() + ' ')
+        # init
+        self.append(">>> ")
         self.cursorToEnd()
 
+    # 输入重载
+    def keyPressEvent(self, event: QKeyEvent):
+        if event.key() == Qt.Key_Return:  # 如果是Enter 按钮
+            order = self.toPlainText().split('\n')[-1].lstrip('>>> ')
+            self.proOrder(order)
+            self.cursorToEnd()
+            super().keyPressEvent(event)
+            self.append(">>> ")
+            self.cursorToEnd()
+        elif event.key() == Qt.Key_Backspace:  # 删除键
+            cursor = self.textCursor()
+            if cursor.columnNumber() > 4 and cursor.blockNumber() == cursor.document().blockCount() - 1:  # 只允许修改最下面一行的四位以后
+                super().keyPressEvent(event)
+        elif event.key() == Qt.Key_Up:  # 上
+            self.backNum += 1
+            ls = self.toPlainText().split('\n')
+            self.setText("\n".join(ls[:-1]))  # 把最后一行去掉
+            self.cursorToEnd()
+            self.append("\n" + ls[-(self.backNum % len(ls)) - 1])
+            super().keyPressEvent(event)
+            self.cursorToEnd()
+        elif event.key() == Qt.Key_Down:  # 下
+            self.backNum -= 1
+            ls = self.toPlainText().split('\n')
+            self.setText("\n".join(ls[:-1]))  # 把最后一行去掉
+            self.cursorToEnd()
+            self.append("\n" + ls[-(self.backNum % len(ls)) - 1])
+            super().keyPressEvent(event)
+            self.cursorToEnd()
+        else:
+            super().keyPressEvent(event)
 
-    def proOrder(self, order):
-        print(order)
-        pass
+    def append(self, text: str):
+        self.setText(self.toPlainText() + text)
 
-    def fresh(self):
-        self.setText(self.toPlainText() + '>>> ')
-        self.cursorToEnd()
-
+    # 接口:将光标移到最后
     def cursorToEnd(self):
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.End)
         self.setTextCursor(cursor)
+
+    # 当输入了\n后响应指令函数，需要被重载
+    def proOrder(self, order: str):
+        pass
 
 
 if __name__ == '__main__':

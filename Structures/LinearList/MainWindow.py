@@ -1,3 +1,4 @@
+# coding: utf-8
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout
 from CustomWidgets import MyTopBar

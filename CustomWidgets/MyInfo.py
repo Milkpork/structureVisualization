@@ -1,11 +1,16 @@
 import sys
 
-from PyQt5.QtGui import QPalette, QColor, QFont
+from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLabel, QWidget, QMainWindow, QApplication, QVBoxLayout
+from CustomWidgets.Fundsettings import Fundsettings
 
 
+# 信息展示（主类）
 class MyInfo(QWidget):
-    def __init__(self, title='test', edition='testEdition'):
+    title_font_size = 50
+    edition_font_size = 14
+
+    def __init__(self, title: str = 'test', edition: str = 'testEdition'):
         super(MyInfo, self).__init__()
 
         self.titleWidget = QLabel(title)
@@ -14,27 +19,24 @@ class MyInfo(QWidget):
 
         self.mySettings()
         self.myLayouts()
-        # self.myStyles()
 
     def mySettings(self):
-        self.titleWidget.setFont(QFont('楷体', 50))
-        self.editionWidget.setFont(QFont('楷体', 14))
+        self.setMaximumHeight(120)
+        self.titleWidget.setFont(QFont(Fundsettings.font_family, self.title_font_size))
+        self.editionWidget.setFont(QFont(Fundsettings.font_family, self.edition_font_size))
         self.mainLayout.setSpacing(0)
 
         self.titleWidget.setContentsMargins(0, 0, 0, 0)
         self.editionWidget.setContentsMargins(50, 0, 0, 0)
 
     def myLayouts(self):
-        self.setMaximumHeight(120)
         self.setLayout(self.mainLayout)
         self.mainLayout.addWidget(self.titleWidget)
         self.mainLayout.addWidget(self.editionWidget)
 
-    def myStyles(self):
-        self.setAutoFillBackground(True)
-        palette = QPalette()
-        palette.setBrush(QPalette.Background, QColor(20, 90, 90))
-        self.setPalette(palette)
+    # 接口:修改标题文字
+    def setTitleText(self, title: str):
+        self.titleWidget.setText(title)
 
 
 if __name__ == '__main__':
