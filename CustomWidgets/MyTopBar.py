@@ -23,11 +23,6 @@ class TopBarButton(QPushButton):
 
 # 首先定义右侧三个按钮 最小化/最大化/关闭
 class minimizeButton(TopBarButton):
-    """
-    最小化按钮
-    初始化时需要传入参数为哪个窗口
-    """
-
     def __init__(self, window: QMainWindow = None):
         super(minimizeButton, self).__init__(window)
         self.setStyleSheet(
@@ -116,10 +111,6 @@ class settingsMenu(QMenu):
     def mySignalConnections(self):
         self.triggered.connect(self.menuSlot)
 
-    # 展示菜单
-    def showMenu(self):
-        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + 40))  # 在setting按钮下方展示
-
     # 菜单内的选项
     def myMenu(self):
         self.addAction('新建')
@@ -128,6 +119,10 @@ class settingsMenu(QMenu):
         self.addAction('导入')
         self.addSeparator()
         self.addAction('设置')
+
+    # 展示菜单
+    def showMenu(self):
+        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + 40))  # 在setting按钮下方展示
 
     # 菜单对应的槽函数（事件）
     def menuSlot(self, ac: QAction):
@@ -221,7 +216,7 @@ class MyTopBar(QWidget):
         self.setCursor(QCursor(Qt.ArrowCursor))
 
     # 双击改变状态
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, event: QMouseEvent):
         if self.window.isFullScreen():
             self.window.showNormal()
         else:
@@ -236,7 +231,8 @@ if __name__ == '__main__':
     class test(QMainWindow):
         def __init__(self):
             super(test, self).__init__()
-            self.setCentralWidget(MyTopBar(self))
+            a = MyTopBar(self)
+            self.setCentralWidget(a)
             self.resize(400, 400)
 
 

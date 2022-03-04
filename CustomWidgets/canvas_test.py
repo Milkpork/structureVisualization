@@ -12,24 +12,25 @@ class MyNode(QGraphicsEllipseItem):
     in_limit = 1  # 入边最大值
     out_limit = 1  # 出边最大值
 
-    def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板,name
+    def __init__(self, loc_x, loc_y, text, canv, name):  # 分别为，位置x，位置y，文字，父画板,name
         """
-        :param a: location x
-        :param b: location x
-        :param t: text
-        :param c: canvas
-        :param n: name
+        :param loc_x: location x
+        :param loc_y: location x
+        :param text: text
+        :param canv: canvas
+        :param name: name
         """
-        super(MyNode, self).__init__(a, b, self.size, self.size)
+        super(MyNode, self).__init__(loc_x, loc_y, self.size, self.size)
 
         self.init_pos = self.pos()
-        self.name = n  # 姓名
-        self.m_pos = (a, b)
-        self.canvas = c
+        self.name = name  # 姓名
+        self.m_pos = (loc_x, loc_y)
+        self.canvas = canv
         self.frame = -1
-        self.lineList = {'inLine': [], 'outLine': []}  # 分为入边和出边
 
-        self.text = QGraphicsSimpleTextItem(t)
+        self.lineList = {}
+
+        self.text = QGraphicsSimpleTextItem(text)
         self.menu = QMenu()
 
         self.mySettings()
@@ -67,11 +68,6 @@ class MyNode(QGraphicsEllipseItem):
     # 移动
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-        self.init_pos = self.pos()
-        for i in self.lineList:
-            for j in self.lineList[i]:
-                j.changePos()
-        self.canvas.view.viewport().update()
 
     # 右击
     def contextMenuEvent(self, event):
@@ -92,19 +88,7 @@ class MyNode(QGraphicsEllipseItem):
 
     # 接口:删除本结点
     def delete(self):
-        if self == self.canvas.headNode:
-            self.canvas.headNode = None
-        # 删除画布字典中的自己
-        del self.canvas.nodeDic[self.name]
-        if len(self.lineList['inLine']) > 0:
-            del self.canvas.lineDic[self.lineList['inLine'][0].name]
-            self.canvas.scene.removeItem(self.lineList['inLine'][0])
-            self.lineList['inLine'][0].startNode.lineList['outLine'].remove(self.lineList['inLine'][0])
-        if len(self.lineList['outLine']) > 0:
-            del self.canvas.lineDic[self.lineList['outLine'][0].name]
-            self.canvas.scene.removeItem(self.lineList['outLine'][0])
-            self.lineList['outLine'][0].endNode.lineList['inLine'].remove(self.lineList['outLine'][0])
-        self.canvas.scene.removeItem(self)  # 删除自身
+        pass
 
     def resume(self):
         self.setRect(*self.m_pos, self.size, self.size)
@@ -152,11 +136,9 @@ class MyLine(QGraphicsLineItem):
         self.line = QLineF()
         self.menu = QMenu()
 
-        self.startNode.lineList['outLine'].append(self)
-        self.endNode.lineList['inLine'].append(self)
-
         self.mySettings()
         self.myMenuSettings()
+        self.addNodeLine()
 
     def mySettings(self):
         self.changePos()
@@ -166,6 +148,9 @@ class MyLine(QGraphicsLineItem):
         self.rightMenu()
         self.menu.setWindowFlags(self.menu.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
         self.menu.triggered.connect(self.menuSlot)
+
+    def addNodeLine(self):
+        pass
 
     # 重载绘制函数
     def paint(self, QP, QStyleOptionGraphicsItem, QWidget_widget=None):
@@ -264,7 +249,6 @@ class MyLine(QGraphicsLineItem):
     # 右击显示菜单
     def contextMenuEvent(self, event):
         super().contextMenuEvent(event)
-        # self.canvas.flags = 1
         self.menu.exec(QCursor().pos())
 
     # 当两端结点坐标变换时，调用该函数修改连线
@@ -295,11 +279,7 @@ class MyLine(QGraphicsLineItem):
 
     # 删除本连线函数
     def delete(self):
-        # 删除画布字典中的自己
-        del self.canvas.lineDic[self.name]
-        self.startNode.lineList['outLine'].remove(self)
-        self.endNode.lineList['inLine'].remove(self)
-        self.canvas.scene.removeItem(self)  # 删除自身
+        pass
 
     def resume(self):
         pass
@@ -344,6 +324,7 @@ class MyCanvas(QFrame):
             "QFrame{border-radius:5px;border:1px solid;background-color:transparent}"
             "QGraphicsView{border-radius:5px;border:2px solid;}"
         )
+
         self.workplace = workplace
         self.nodeType = nodeType
         self.lineType = lineType
@@ -387,25 +368,7 @@ class MyCanvas(QFrame):
         return self.nodeDic["node" + str(self.nodeCount)]
 
     def addLine(self):
-        if self.tempSt == self.tempEd:
-            return
-
-        if len(self.tempSt.lineList['outLine']) >= self.nodeType.out_limit or len(
-                self.tempEd.lineList['inLine']) >= self.nodeType.in_limit:
-            self.workplace.logInfo.append('out of limit\n>>> ')
-            self.setCursor(QCursor(Qt.ArrowCursor))
-            self.tempSt = None
-            self.tempEd = None
-            return
-
-        self.lineDic["line" + str(self.lineCount)] = self.lineType(self.tempSt, self.tempEd, self,
-                                                                   "line" + str(self.lineCount))
-        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
-        self.tempSt = None
-        self.tempEd = None
-        self.lineCount += 1
-
-        self.setCursor(QCursor(Qt.ArrowCursor))
+        pass
 
     def setHeadNode(self, node):
         # 设置头节点接口
@@ -423,9 +386,6 @@ class MyCanvas(QFrame):
 
     def clear(self, nodeList=None, lineList=None):
         pass
-
-    def workplace(self):
-        return self.workplace
 
 
 if __name__ == '__main__':

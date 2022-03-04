@@ -38,14 +38,18 @@ class LogInfo_LinearList(MyLogInfo):
 class RunButton_LinearList(MyRunButton):
     def __init__(self, workplace):
         super(RunButton_LinearList, self).__init__(workplace)
-        self.changeItems(['新建', '遍历'])
+        self.changeItems(['新建', '先序遍历', '中序遍历', '后序遍历'])
 
     def menuSlot(self, t):
         if self.flag == 0:
             self.flag = 1
             return
-        if t == '遍历':
-            self.getWorkplace().canvas.ergodic()
+        if t == '先序遍历':
+            self.getWorkplace().canvas.ergodic(0)
+        elif t == '中序遍历':
+            self.getWorkplace().canvas.ergodic(1)
+        elif t == '后序遍历':
+            self.getWorkplace().canvas.ergodic(2)
         elif t == '新建':
             self.getWorkplace().canvas.scene.addItem(self.getWorkplace().canvas.addNode())
             self.getWorkplace().canvas.nodeCount += 1
@@ -53,7 +57,7 @@ class RunButton_LinearList(MyRunButton):
 
 class Node_LinearList(MyNode):
     in_limit = 1  # 入边最大值
-    out_limit = 1  # 出边最大值
+    out_limit = 2  # 出边最大值
 
     def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板
         super(Node_LinearList, self).__init__(a, b, t, c, n)
@@ -61,7 +65,7 @@ class Node_LinearList(MyNode):
     def rightMenu(self):
         self.menu.addAction('删除')
         self.menu.addSeparator()
-        self.menu.addAction('连线')
+        self.menu.addAction('设置左节点')
         self.menu.addSeparator()
         self.menu.addAction('设置头节点')
 
@@ -69,7 +73,7 @@ class Node_LinearList(MyNode):
         if ac.text() == '连线':
             self.canvas.setCursor(QCursor(Qt.CrossCursor))
             self.canvas.tempSt = self
-        elif ac.text() == '设置头节点':
+        elif ac.text() == '设置左节点':
             self.canvas.setHeadNode(self)
         elif ac.text() == '删除':
             self.delete()
@@ -98,7 +102,7 @@ class Canvas_LinearList(MyCanvas):
     def __init__(self, workplace=None):
         super(Canvas_LinearList, self).__init__(Node_LinearList, Line_LinearList, View_LinearList, workplace)
 
-    def ergodic(self):
+    def ergodic(self,mode=0):
         # 遍历
         if self.headNode is None:  # 没有头节点
             print("no head node!")
@@ -207,7 +211,7 @@ class Canvas_LinearList(MyCanvas):
 
 class WorkPlace(QWidget):
 
-    def __init__(self, t='Canvas', te='线性表'):  # 参数为text和textEdition
+    def __init__(self, t='Canvas', te='二叉树'):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
 
         self.title = t

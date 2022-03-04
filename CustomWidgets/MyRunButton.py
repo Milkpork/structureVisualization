@@ -53,7 +53,7 @@ class MyLineEdit(QLineEdit):
 class MyRunButton(QComboBox):
     font_size = 20  # 字体大小
 
-    def __init__(self, canvas: QWidget = None):
+    def __init__(self, workplace: QWidget = None):
         super(MyRunButton, self).__init__()
         self.setStyleSheet(
             "MyRunButton{background-color:transparent;border:1px solid black;border-radius:5px}"
@@ -67,7 +67,7 @@ class MyRunButton(QComboBox):
         )
         self.flag = 0
         self.items = ['test1', 'test2', 'test3', 'test4']
-        self.canvas = canvas
+        self.workplace = workplace
         self.myLineEdit()  # 设置文本框
         self.myListWidget()  # 设置下拉框
 
@@ -112,6 +112,10 @@ class MyRunButton(QComboBox):
     def changeItems(self, items: list):
         self.items = items
         self.myListWidget()
+
+    # 接口:返回工作区
+    def getWorkplace(self):
+        return self.workplace
 
 
 if __name__ == '__main__':

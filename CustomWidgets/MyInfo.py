@@ -43,7 +43,6 @@ if __name__ == '__main__':
     class test(QMainWindow):
         def __init__(self):
             super(test, self).__init__()
-            # self.setWindowFlags(Qt.FramelessWindowHint)
             self.a = MyInfo()
             self.a.setParent(self)
             self.resize(400, 400)

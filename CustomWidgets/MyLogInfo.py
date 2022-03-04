@@ -9,14 +9,14 @@ from CustomWidgets.Fundsettings import Fundsettings
 class MyLogInfo(QTextEdit):
     font_size = 12  # 字体大小
 
-    def __init__(self, canvas: QWidget = None):
+    def __init__(self, workplace: QWidget = None):
         super(MyLogInfo, self).__init__()
         self.setStyleSheet(
             "QTextEdit{border:2px solid gray;margin:30px 20px 20px 5px;background-color:transparent;border-radius:5px;}"
             "QTextEdit:focus {border: 2px solid black;}"
         )
         self.backNum = 0
-        self.canvas = canvas
+        self.workplace = workplace
 
         self.mySettings()
 
@@ -69,6 +69,10 @@ class MyLogInfo(QTextEdit):
         cursor = self.textCursor()
         cursor.movePosition(QTextCursor.End)
         self.setTextCursor(cursor)
+
+    # 接口:返回工作区
+    def getWorkplace(self):
+        return self.workplace
 
     # 当输入了\n后响应指令函数，需要被重载
     def proOrder(self, order: str):

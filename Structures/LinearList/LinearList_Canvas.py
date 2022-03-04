@@ -7,56 +7,21 @@ from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSi
 from CustomWidgets import MyInfo, MyLogInfo, MyRunButton, MyNode, MyLine, MyView, MyCanvas
 
 
-class Info_LinearList(MyInfo):
-    def __init__(self, title='test', edition='testEdition'):
-        super(Info_LinearList, self).__init__(title, edition)
-
-
-class LogInfo_LinearList(MyLogInfo):
-    def __init__(self, canvas):
-        super(LogInfo_LinearList, self).__init__(canvas)
-
-    def proOrder(self, order):
-        ls = order.split()
-        if ls[0] == 'insert':
-            com = re.compile(r'^\d\d?$')  # 通过正则检擦是否为两位数
-            for i in ls[1:]:
-                if com.match(i):
-                    continue
-                else:
-                    self.append('no match')
-                    break
-            else:
-                self.getWorkplace().canvas.insert(ls[1:])  # 需要用到画板的插入函数
-        elif ls[0] == 'help':
-            self.append('\n1.(insert [num] [num] ... ) can insert')
-            self.append('\n2.more are going to append...')
-        else:
-            self.append('\nno such order')
-
-
-class RunButton_LinearList(MyRunButton):
-    def __init__(self, workplace):
-        super(RunButton_LinearList, self).__init__(workplace)
-        self.changeItems(['新建', '遍历'])
-
-    def menuSlot(self, t):
-        if self.flag == 0:
-            self.flag = 1
-            return
-        if t == '遍历':
-            self.getWorkplace().canvas.ergodic()
-        elif t == '新建':
-            self.getWorkplace().canvas.scene.addItem(self.getWorkplace().canvas.addNode())
-            self.getWorkplace().canvas.nodeCount += 1
-
-
 class Node_LinearList(MyNode):
     in_limit = 1  # 入边最大值
     out_limit = 1  # 出边最大值
 
     def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板
         super(Node_LinearList, self).__init__(a, b, t, c, n)
+        self.lineList = {'next': [], 'previous': []}
+
+    def mouseMoveEvent(self, event):
+        super().mouseMoveEvent(event)
+        self.init_pos = self.pos()
+        for i in self.lineList:
+            for j in self.lineList[i]:
+                j.changePos()
+        self.canvas.view.viewport().update()
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -74,10 +39,30 @@ class Node_LinearList(MyNode):
         elif ac.text() == '删除':
             self.delete()
 
+    def delete(self):
+        if self == self.canvas.headNode:
+            self.canvas.headNode = None
+        # 删除画布字典中的自己
+        del self.canvas.nodeDic[self.name]
+
+        if len(self.lineList['previous']) == 1:
+            del self.canvas.lineDic[self.lineList['previous'][0].name]
+            self.canvas.scene.removeItem(self.lineList['previous'][0])
+            self.lineList['previous'][0].startNode.lineList['next'] = []
+        if len(self.lineList['next']) == 1:
+            del self.canvas.lineDic[self.lineList['next'][0].name]
+            self.canvas.scene.removeItem(self.lineList['next'][0])
+            self.lineList['next'][0].endNode.lineList['previous'] = []
+        self.canvas.scene.removeItem(self)  # 删除自身
+
 
 class Line_LinearList(MyLine):
     def __init__(self, sn=None, en=None, c=None, n=None):
         super(Line_LinearList, self).__init__(sn, en, c, n)
+
+    def addNodeLine(self):
+        self.startNode.lineList['next'].append(self)
+        self.endNode.lineList['previous'].append(self)
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -88,6 +73,13 @@ class Line_LinearList(MyLine):
         if ac.text() == '删除':
             self.delete()
 
+    def delete(self):
+        # 删除画布字典中的自己
+        del self.canvas.lineDic[self.name]
+        self.startNode.lineList['next'] = []
+        self.endNode.lineList['previous'] = []
+        self.canvas.scene.removeItem(self)  # 删除自身
+
 
 class View_LinearList(MyView):
     def __init__(self, sc, canv):
@@ -97,6 +89,27 @@ class View_LinearList(MyView):
 class Canvas_LinearList(MyCanvas):
     def __init__(self, workplace=None):
         super(Canvas_LinearList, self).__init__(Node_LinearList, Line_LinearList, View_LinearList, workplace)
+
+    def addLine(self):
+        if self.tempSt == self.tempEd:
+            return
+
+        if len(self.tempSt.lineList['next']) == 1 or len(
+                self.tempEd.lineList['previous']) == 1:
+            self.workplace.logInfo.append('out of limit\n>>> ')
+            self.setCursor(QCursor(Qt.ArrowCursor))
+            self.tempSt = None
+            self.tempEd = None
+            return
+
+        self.lineDic["line" + str(self.lineCount)] = self.lineType(self.tempSt, self.tempEd, self,
+                                                                   "line" + str(self.lineCount))
+        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
+        self.tempSt = None
+        self.tempEd = None
+        self.lineCount += 1
+
+        self.setCursor(QCursor(Qt.ArrowCursor))
 
     def ergodic(self):
         # 遍历
@@ -111,9 +124,9 @@ class Canvas_LinearList(MyCanvas):
             # 插入动画
             self.workplace.logInfo.append(nowNode.text.text() + " ")
             queue.append(nowNode)
-            if len(nowNode.lineList['outLine']) > 0:
-                queue.append(nowNode.lineList['outLine'][0])
-                nowNode = nowNode.lineList['outLine'][0].endNode
+            if len(nowNode.lineList['next']) > 0:
+                queue.append(nowNode.lineList['next'][0])
+                nowNode = nowNode.lineList['next'][0].endNode
                 # 循环链表防止死循环
                 if nowNode == self.headNode:
                     break
@@ -203,84 +216,3 @@ class Canvas_LinearList(MyCanvas):
             line.setPen(pen)
         if self.headNode is not None:
             self.headNode.setPen(QPen(QColor(255, 165, 0), 2))
-
-
-class WorkPlace(QWidget):
-
-    def __init__(self, t='Canvas', te='线性表'):  # 参数为text和textEdition
-        super(WorkPlace, self).__init__()
-
-        self.title = t
-        self.textEdition = te
-
-        # 组件
-        self.info = Info_LinearList(self.title, self.textEdition)
-        self.canvas = Canvas_LinearList(self)
-        self.runButton = RunButton_LinearList(self)
-        self.logInfo = LogInfo_LinearList(self)
-
-        self.mainWidget = QWidget()
-        self.mainLayout = QHBoxLayout()  # 主布局，分割输入框
-
-        self.myWidget2 = QWidget()
-        self.layout2 = QVBoxLayout()  # 二层布局，分割画布
-
-        self.myWidget3 = QWidget()
-        self.layout3 = QHBoxLayout()  # 三级布局，分割按钮和信息
-
-        # 函数
-        self.myLayouts()
-        self.mySettings()
-
-    def myLayouts(self):
-        self.setLayout(self.mainLayout)
-
-        self.mainLayout.addWidget(self.myWidget2)
-        self.myWidget2.setLayout(self.layout2)
-        self.mainLayout.addWidget(self.logInfo)
-        self.mainLayout.setSpacing(30)
-
-        sizePolicy = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        sizePolicy.setHorizontalStretch(7)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.myWidget2.sizePolicy().hasHeightForWidth())
-        self.myWidget2.setSizePolicy(sizePolicy)
-
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        sizePolicy1.setHorizontalStretch(3)
-        sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.logInfo.sizePolicy().hasHeightForWidth())
-        self.logInfo.setSizePolicy(sizePolicy1)
-
-        self.layout2.addWidget(self.myWidget3)
-        self.myWidget3.setLayout(self.layout3)
-        self.layout2.addWidget(self.canvas)
-        self.layout2.setSpacing(20)
-
-        sizePolicy = QSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(1)
-        sizePolicy.setHeightForWidth(self.myWidget3.sizePolicy().hasHeightForWidth())
-        self.myWidget3.setSizePolicy(sizePolicy)
-
-        sizePolicy1 = QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        sizePolicy1.setHorizontalStretch(0)
-        sizePolicy1.setVerticalStretch(7)
-        sizePolicy1.setHeightForWidth(self.canvas.sizePolicy().hasHeightForWidth())
-        self.canvas.setSizePolicy(sizePolicy1)
-
-        self.layout3.addWidget(self.info)
-        self.layout3.addWidget(self.runButton)
-
-    def mySettings(self):
-        self.resize(800, 600)
-        self.mainLayout.setContentsMargins(0, 0, 0, 0)
-        self.layout2.setContentsMargins(20, 0, 0, 20)
-        self.layout3.setContentsMargins(0, 0, 0, 0)
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    win = WorkPlace('canvas', 'LinearList')
-    win.show()
-    sys.exit(app.exec_())
