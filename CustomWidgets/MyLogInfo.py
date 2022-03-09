@@ -31,7 +31,7 @@ class MyLogInfo(QTextEdit):
 
     # 输入重载
     def keyPressEvent(self, event: QKeyEvent):
-        if event.key() == Qt.Key_Return:  # 如果是Enter 按钮
+        if event.key() == Qt.Key_Return or event.key() == Qt.Key_Enter:  # 如果是Enter 按钮
             order = self.toPlainText().split('\n')[-1].lstrip('>>> ')
             self.proOrder(order)
             self.cursorToEnd()

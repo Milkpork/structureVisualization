@@ -1,6 +1,6 @@
 import sys
 
-from PyQt5.QtCore import Qt, QPointF, QLineF
+from PyQt5.QtCore import Qt, QPointF, QLineF, QTimeLine
 from PyQt5.QtGui import QPen, QBrush, QColor, QFont, QCursor, QPainter, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QApplication, \
     QVBoxLayout, QGraphicsItem, QGraphicsSimpleTextItem, QMenu, QGraphicsLineItem, QFrame
@@ -9,27 +9,27 @@ from CustomWidgets.Fundsettings import Fundsettings
 
 class MyNode(QGraphicsEllipseItem):
     size = 40
-    in_limit = 1  # 入边最大值
-    out_limit = 1  # 出边最大值
 
-    def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板,name
+    def __init__(self, loc_x, loc_y, text, canv, name):  # 分别为，位置x，位置y，文字，父画板,name
         """
-        :param a: location x
-        :param b: location x
-        :param t: text
-        :param c: canvas
-        :param n: name
+        lineList需要被重载!!
+        :param loc_x: location x
+        :param loc_y: location x
+        :param text: text
+        :param canv: canvas
+        :param name: name
         """
-        super(MyNode, self).__init__(a, b, self.size, self.size)
+        super(MyNode, self).__init__(0, 0, self.size, self.size)
 
+        self.setPos(loc_x, loc_y)
         self.init_pos = self.pos()
-        self.name = n  # 姓名
-        self.m_pos = (a, b)
-        self.canvas = c
+        self.name = name  # 姓名
+        self.canvas = canv
         self.frame = -1
-        self.lineList = {'inLine': [], 'outLine': []}  # 分为入边和出边
 
-        self.text = QGraphicsSimpleTextItem(t)
+        self.lineList = {}  # 需要重载
+
+        self.text = QGraphicsSimpleTextItem(text)
         self.menu = QMenu()
 
         self.mySettings()
@@ -48,8 +48,8 @@ class MyNode(QGraphicsEllipseItem):
     def myTextSettings(self):
         self.text.setFont(QFont(Fundsettings.font_family, self.size // 2))
         self.text.setParentItem(self)
-        self.text.setPos(self.m_pos[0] + self.size // 3 - (len(self.text.text()) - 1) * (self.size * 0.2),
-                         self.m_pos[1] + self.size // 5)  # 设置文字在中间的位置
+        self.text.setPos(0 + self.size // 3 - (len(self.text.text()) - 1) * (self.size * 0.2),
+                         0 + self.size // 5)  # 设置文字在中间的位置
 
     def myMenuSettings(self):
         self.rightMenu()  # 菜单
@@ -57,32 +57,29 @@ class MyNode(QGraphicsEllipseItem):
         # 设置无阴影背景
         self.menu.setWindowFlags(self.menu.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
 
-    # 按下重载,主要用于判断连线
     def mousePressEvent(self, event):
         super().mousePressEvent(event)
         if self.canvas.cursor() == QCursor(Qt.CrossCursor):
             self.canvas.tempEd = self
             self.canvas.addLine()
 
-    # 移动
+    def mouseDoubleClickEvent(self, event):
+        super().mouseDoubleClickEvent(event)
+        print(self.pos())
+
+    # 需要重载:移动
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
-        self.init_pos = self.pos()
-        for i in self.lineList:
-            for j in self.lineList[i]:
-                j.changePos()
-        self.canvas.view.viewport().update()
 
-    # 右击
     def contextMenuEvent(self, event):
         super().contextMenuEvent(event)
         self.menu.exec(QCursor().pos())
 
-    # 需要被重载:右击菜单
+    # 需要重载:右击菜单
     def rightMenu(self):
         pass
 
-    # 需要被重载:菜单的响应函数
+    # 需要重载:菜单的响应函数
     def menuSlot(self, ac):
         pass
 
@@ -90,24 +87,12 @@ class MyNode(QGraphicsEllipseItem):
     def setText(self, t):
         self.text.setText(t)
 
-    # 接口:删除本结点
+    # 需要重载:接口:删除本结点
     def delete(self):
-        if self == self.canvas.headNode:
-            self.canvas.headNode = None
-        # 删除画布字典中的自己
-        del self.canvas.nodeDic[self.name]
-        if len(self.lineList['inLine']) > 0:
-            del self.canvas.lineDic[self.lineList['inLine'][0].name]
-            self.canvas.scene.removeItem(self.lineList['inLine'][0])
-            self.lineList['inLine'][0].startNode.lineList['outLine'].remove(self.lineList['inLine'][0])
-        if len(self.lineList['outLine']) > 0:
-            del self.canvas.lineDic[self.lineList['outLine'][0].name]
-            self.canvas.scene.removeItem(self.lineList['outLine'][0])
-            self.lineList['outLine'][0].endNode.lineList['inLine'].remove(self.lineList['outLine'][0])
-        self.canvas.scene.removeItem(self)  # 删除自身
+        pass
 
     def resume(self):
-        self.setRect(*self.m_pos, self.size, self.size)
+        self.setRect(0, 0, self.size, self.size)
         self.setPos(self.init_pos)
 
     # 动画
@@ -152,11 +137,9 @@ class MyLine(QGraphicsLineItem):
         self.line = QLineF()
         self.menu = QMenu()
 
-        self.startNode.lineList['outLine'].append(self)
-        self.endNode.lineList['inLine'].append(self)
-
         self.mySettings()
         self.myMenuSettings()
+        self.addNodeLine()
 
     def mySettings(self):
         self.changePos()
@@ -166,6 +149,10 @@ class MyLine(QGraphicsLineItem):
         self.rightMenu()
         self.menu.setWindowFlags(self.menu.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
         self.menu.triggered.connect(self.menuSlot)
+
+    # 需要重载:将自己加入头尾结点的字典中
+    def addNodeLine(self):
+        pass
 
     # 重载绘制函数
     def paint(self, QP, QStyleOptionGraphicsItem, QWidget_widget=None):
@@ -264,7 +251,6 @@ class MyLine(QGraphicsLineItem):
     # 右击显示菜单
     def contextMenuEvent(self, event):
         super().contextMenuEvent(event)
-        # self.canvas.flags = 1
         self.menu.exec(QCursor().pos())
 
     # 当两端结点坐标变换时，调用该函数修改连线
@@ -285,21 +271,17 @@ class MyLine(QGraphicsLineItem):
                      self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
                      self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y())
 
-    # 右击菜单内容，需要被重载
+    # 需要重载:右击菜单内容
     def rightMenu(self):
         pass
 
-    # 右击响应函数，需要被重载
+    # 需要重载:右击响应函数
     def menuSlot(self, ac):
         pass
 
-    # 删除本连线函数
+    # 需要重载:删除本连线函数
     def delete(self):
-        # 删除画布字典中的自己
-        del self.canvas.lineDic[self.name]
-        self.startNode.lineList['outLine'].remove(self)
-        self.endNode.lineList['inLine'].remove(self)
-        self.canvas.scene.removeItem(self)  # 删除自身
+        pass
 
     def resume(self):
         pass
@@ -338,12 +320,15 @@ class MyView(QGraphicsView):
 
 
 class MyCanvas(QFrame):
+    size = 400
+
     def __init__(self, nodeType, lineType, viewType, workplace=None):
         super(MyCanvas, self).__init__()
         self.setStyleSheet(
             "QFrame{border-radius:5px;border:1px solid;background-color:transparent}"
             "QGraphicsView{border-radius:5px;border:2px solid;}"
         )
+
         self.workplace = workplace
         self.nodeType = nodeType
         self.lineType = lineType
@@ -365,7 +350,7 @@ class MyCanvas(QFrame):
         self.mySettings()
 
     def mySettings(self):
-        self.resize(400, 400)
+        self.resize(self.size, self.size)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
 
         self.setLineWidth(0)  # 设置外线宽度
@@ -387,25 +372,7 @@ class MyCanvas(QFrame):
         return self.nodeDic["node" + str(self.nodeCount)]
 
     def addLine(self):
-        if self.tempSt == self.tempEd:
-            return
-
-        if len(self.tempSt.lineList['outLine']) >= self.nodeType.out_limit or len(
-                self.tempEd.lineList['inLine']) >= self.nodeType.in_limit:
-            self.workplace.logInfo.append('out of limit\n>>> ')
-            self.setCursor(QCursor(Qt.ArrowCursor))
-            self.tempSt = None
-            self.tempEd = None
-            return
-
-        self.lineDic["line" + str(self.lineCount)] = self.lineType(self.tempSt, self.tempEd, self,
-                                                                   "line" + str(self.lineCount))
-        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
-        self.tempSt = None
-        self.tempEd = None
-        self.lineCount += 1
-
-        self.setCursor(QCursor(Qt.ArrowCursor))
+        pass
 
     def setHeadNode(self, node):
         # 设置头节点接口
@@ -418,14 +385,36 @@ class MyCanvas(QFrame):
             node.setPen(QPen(QColor(255, 165, 0), 2))
 
     # 以下是与输入框一同使用的指令
+    # 需要重载:
     def insert(self, ls):
         pass
 
+    # 需要重载:
     def clear(self, nodeList=None, lineList=None):
         pass
 
-    def workplace(self):
-        return self.workplace
+    def playAnim(self, queue):
+        # animation
+        def anim(frame, allframe):
+            index = frame // allframe
+            queue[index].myAnimation(frame, allframe)
+
+        nums = len(queue)
+        singleFrame = 100
+        singleTime = 1000
+        timeline = QTimeLine(nums * singleTime, self)  # 实例化一个时间轴，持续时间为5秒
+        timeline.setFrameRange(0, singleFrame * nums)  # 设置帧率范围，该值表示在规定的时间内将要执行多少帧
+        timeline.frameChanged.connect(lambda frame: anim(frame - 1, singleFrame))  # 帧数变化时发出信号
+        timeline.setLoopCount(1)  # 传入0代表无限循环运行.传入正整数会运行相应次数，传入负数不运行
+        timeline.setCurveShape(QTimeLine.LinearCurve)
+        timeline.start()  # 启动动画
+
+        def fini():
+            for i in queue:
+                i.frame = -1
+                i.resume()
+
+        timeline.finished.connect(fini)
 
 
 if __name__ == '__main__':

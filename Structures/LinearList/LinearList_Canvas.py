@@ -1,16 +1,10 @@
-import re
-import sys
-
 from PyQt5.QtCore import Qt, QTimeLine
 from PyQt5.QtGui import QCursor, QPen, QColor
-from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
-from CustomWidgets import MyInfo, MyLogInfo, MyRunButton, MyNode, MyLine, MyView, MyCanvas
+
+from CustomWidgets import MyNode, MyLine, MyView, MyCanvas
 
 
 class Node_LinearList(MyNode):
-    in_limit = 1  # 入边最大值
-    out_limit = 1  # 出边最大值
-
     def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板
         super(Node_LinearList, self).__init__(a, b, t, c, n)
         self.lineList = {'next': [], 'previous': []}
@@ -134,46 +128,7 @@ class Canvas_LinearList(MyCanvas):
                 break
         self.workplace.logInfo.append("\n>>> ")
 
-        # animation
-
-        def anim(frame, allframe):
-            index = frame // allframe
-            queue[index].myAnimation(frame, allframe)
-
-            # queue[index - 1].frame = -1
-
-        nums = len(queue)
-        singleFrame = 100
-        singleTime = 1000
-        timeline = QTimeLine(nums * singleTime, self)  # 实例化一个时间轴，持续时间为5秒
-        timeline.setFrameRange(0, singleFrame * nums)  # 设置帧率范围，该值表示在规定的时间内将要执行多少帧
-        timeline.frameChanged.connect(lambda frame: anim(frame - 1, singleFrame))  # 帧数变化时发出信号
-        timeline.setLoopCount(1)  # 传入0代表无限循环运行.传入正整数会运行相应次数，传入负数不运行
-        timeline.setCurveShape(QTimeLine.LinearCurve)
-        timeline.start()  # 启动动画
-
-        def fini():
-            for i in queue:
-                i.frame = -1
-                i.resume()
-
-        timeline.finished.connect(fini)
-
-        # 多线程
-        # def fun(queues):
-        #     nums = len(queue)
-        #     t1 = time.perf_counter()
-        #     for i in range(nums):
-        #         while True:
-        #             # 需要线程
-        #             if time.perf_counter() - t1 >= 1:
-        #                 queues[i].myAnimation()
-        #                 t1 = time.perf_counter()
-        #                 break
-        #
-        # # 动画部分
-        # t = Thread(target=lambda: fun(queue))
-        # t.start()
+        self.playAnim(queue)
 
     def insert(self, ls):
         gap = 20  # 节点间的间隔
@@ -181,10 +136,10 @@ class Canvas_LinearList(MyCanvas):
         minPadding = 5  # 防止上方溢出
         st = self.nodeCount
         for i in ls:
-            self.nodeDic["node" + str(self.nodeCount)] = Node_LinearList(gap * (self.nodeCount % maxSize),
-                                                                         minPadding + gap * (
-                                                                                 self.nodeCount // maxSize),
-                                                                         i, self, "node" + str(self.nodeCount))
+            self.nodeDic["node" + str(self.nodeCount)] = self.nodeType(gap * (self.nodeCount % maxSize),
+                                                                       minPadding + gap * (
+                                                                               self.nodeCount // maxSize),
+                                                                       i, self, "node" + str(self.nodeCount))
             self.scene.addItem(self.nodeDic["node" + str(self.nodeCount)])
             self.nodeCount += 1
 
@@ -216,3 +171,35 @@ class Canvas_LinearList(MyCanvas):
             line.setPen(pen)
         if self.headNode is not None:
             self.headNode.setPen(QPen(QColor(255, 165, 0), 2))
+
+    def format(self):
+        print(self.size, self.nodeType.size)
+        flag = 1
+        nowPos = [0, 0]
+        if self.headNode is None:
+            return
+        nowNode = self.headNode
+        while True:
+            nowNode.setPos(*nowPos)
+            if flag == 1:
+                nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
+                if nowPos[0] > self.size:
+                    flag = -1
+                    nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
+                    nowPos[1] = nowPos[1] - flag * self.nodeType.size * 2
+            elif flag == -1:
+                nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
+                if nowPos[0] < 0:
+                    flag = 1
+                    nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
+                    nowPos[1] = nowPos[1] + flag * self.nodeType.size * 2
+
+            nowNode.init_pos = nowNode.pos()
+            for i in nowNode.lineList:
+                for j in nowNode.lineList[i]:
+                    j.changePos()
+            self.view.viewport().update()
+            if len(nowNode.lineList['next']) == 0:
+                break
+            else:
+                nowNode = nowNode.lineList['next'][0].endNode
