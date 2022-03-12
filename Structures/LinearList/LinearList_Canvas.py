@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt, QTimeLine
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QCursor, QPen, QColor
 
 from CustomWidgets import MyNode, MyLine, MyView, MyCanvas
@@ -96,9 +96,11 @@ class Canvas_LinearList(MyCanvas):
             self.tempEd = None
             return
 
-        self.lineDic["line" + str(self.lineCount)] = self.lineType(self.tempSt, self.tempEd, self,
-                                                                   "line" + str(self.lineCount))
-        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
+        self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
+            self.tempSt, self.tempEd, self, f"line{str(self.lineCount)}"
+        )
+
+        self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
         self.tempSt = None
         self.tempEd = None
         self.lineCount += 1
@@ -116,15 +118,14 @@ class Canvas_LinearList(MyCanvas):
         self.workplace.logInfo.append("result : ")
         while True:
             # 插入动画
-            self.workplace.logInfo.append(nowNode.text.text() + " ")
+            self.workplace.logInfo.append(f'{nowNode.text.text()} ')
             queue.append(nowNode)
-            if len(nowNode.lineList['next']) > 0:
-                queue.append(nowNode.lineList['next'][0])
-                nowNode = nowNode.lineList['next'][0].endNode
-                # 循环链表防止死循环
-                if nowNode == self.headNode:
-                    break
-            else:
+            if len(nowNode.lineList['next']) <= 0:
+                break
+            queue.append(nowNode.lineList['next'][0])
+            nowNode = nowNode.lineList['next'][0].endNode
+            # 循环链表防止死循环
+            if nowNode == self.headNode:
                 break
         self.workplace.logInfo.append("\n>>> ")
 
@@ -136,18 +137,26 @@ class Canvas_LinearList(MyCanvas):
         minPadding = 5  # 防止上方溢出
         st = self.nodeCount
         for i in ls:
-            self.nodeDic["node" + str(self.nodeCount)] = self.nodeType(gap * (self.nodeCount % maxSize),
-                                                                       minPadding + gap * (
-                                                                               self.nodeCount // maxSize),
-                                                                       i, self, "node" + str(self.nodeCount))
-            self.scene.addItem(self.nodeDic["node" + str(self.nodeCount)])
+            self.nodeDic[f"node{str(self.nodeCount)}"] = self.nodeType(
+                gap * (self.nodeCount % maxSize),
+                minPadding + gap * (self.nodeCount // maxSize),
+                i,
+                self,
+                f"node{str(self.nodeCount)}",
+            )
+
+            self.scene.addItem(self.nodeDic[f"node{str(self.nodeCount)}"])
             self.nodeCount += 1
 
         for i in range(st, self.nodeCount - 1):
-            self.lineDic["line" + str(self.lineCount)] = Line_LinearList(self.nodeDic["node" + str(i)],
-                                                                         self.nodeDic["node" + str(i + 1)], self,
-                                                                         "line" + str(self.lineCount))
-            self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
+            self.lineDic[f"line{str(self.lineCount)}"] = Line_LinearList(
+                self.nodeDic[f"node{str(i)}"],
+                self.nodeDic[f"node{str(i + 1)}"],
+                self,
+                f"line{str(self.lineCount)}",
+            )
+
+            self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
             self.tempSt = None
             self.tempEd = None
             self.lineCount += 1
@@ -173,7 +182,6 @@ class Canvas_LinearList(MyCanvas):
             self.headNode.setPen(QPen(QColor(255, 165, 0), 2))
 
     def format(self):
-        print(self.size, self.nodeType.size)
         flag = 1
         nowPos = [0, 0]
         if self.headNode is None:
@@ -181,6 +189,7 @@ class Canvas_LinearList(MyCanvas):
         nowNode = self.headNode
         while True:
             nowNode.setPos(*nowPos)
+            nowNode.init_pos = nowNode.pos()
             if flag == 1:
                 nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
                 if nowPos[0] > self.size:
@@ -194,7 +203,6 @@ class Canvas_LinearList(MyCanvas):
                     nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
                     nowPos[1] = nowPos[1] + flag * self.nodeType.size * 2
 
-            nowNode.init_pos = nowNode.pos()
             for i in nowNode.lineList:
                 for j in nowNode.lineList[i]:
                     j.changePos()

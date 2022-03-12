@@ -152,7 +152,7 @@ class MyTopBar(QWidget):
         self.settingButton = settingButton(self.window)
         self.settingsMenu = settingsMenu(self.window)
 
-        if settingExists is False:
+        if not settingExists:
             self.setting.setVisible(False)
 
         self.mySettings()

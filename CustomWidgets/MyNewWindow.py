@@ -1,16 +1,50 @@
 import sys
 
 from PyQt5.QtCore import QRect
-from PyQt5.QtGui import QIcon, QPalette, QColor
+from PyQt5.QtGui import QIcon, QPalette, QColor, QPainter
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QMainWindow, QApplication, QFrame, \
-    QVBoxLayout, QHBoxLayout, QGridLayout
+    QVBoxLayout, QHBoxLayout, QGridLayout, QStyleOption, QStyle
 
 from CustomWidgets import Fundsettings
 
 
-class demo(QPushButton):
+class InputWidget(QWidget):
+    def __init__(self, inputs):
+        super(InputWidget, self).__init__()
+        self.inputs = inputs
+        self.setStyleSheet(
+            "InputWidget{background:transparent;}"
+            "InputWidget:hover{background:rgba(155,155,155,.7);}"
+        )
+
+    def mouseReleaseEvent(self, event):
+        super(InputWidget, self).mouseReleaseEvent(event)
+        self.inputs.setFocus()
+
+    def paintEvent(self, event):
+        opt = QStyleOption()
+        opt.initFrom(self)
+        p = QPainter(self)
+        self.style().drawPrimitive(QStyle.PE_Widget, opt, p, self)
+
+
+class InputEdit(QLineEdit):
     def __init__(self):
-        super(demo, self).__init__()
+        super(InputEdit, self).__init__()
+        self.setStyleSheet(
+            "InputEdit{background-color: transparent;border:0px;height:25px;}"
+        )
+
+    def focusInEvent(self, event):
+        self.setStyleSheet(
+            "InputEdit{background-color: transparent;border:0px;border-bottom:2px solid red;height:25px;}"
+        )
+
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        self.setStyleSheet(
+            "InputEdit{background-color: transparent;border:0px;height:25px;}"
+        )
 
 
 class SettingDialog(QWidget):
@@ -20,14 +54,14 @@ class SettingDialog(QWidget):
         self.mainLayout = QVBoxLayout()
 
         self.titleLayout = QHBoxLayout()
-        self.titleWidget = QWidget()
         self.titleLabel = QLabel("title")
-        self.titleInput = QLineEdit()
+        self.titleInput = InputEdit()
+        self.titleWidget = InputWidget(self.titleInput)
 
         self.detailLayout = QHBoxLayout()
-        self.detailWidget = QWidget()
         self.detailLabel = QLabel("details")
-        self.detailInput = QLineEdit()
+        self.detailInput = InputEdit()
+        self.detailWidget = InputWidget(self.detailInput)
 
         self.childOptionListWidget = QWidget()
         self.childOptionListLayout = QGridLayout()
@@ -41,12 +75,11 @@ class SettingDialog(QWidget):
         self.myLayouts()
 
         # test
-        self.addChildClass('hello')
-        self.addChildClass('hello')
-        self.addChildClass('hello')
-        self.addChildClass('hello')
-        self.addChildClass('hello')
-        self.addChildClass('hello')
+        classNames = ['hello1', 'hello1', 'hello1', 'hello1', 'hello1']
+        self.setChildrenClass(classNames)
+
+        opList = ['1', '1', '1']
+        self.setOperations(opList)
 
     def mySettings(self):
         self.resize(400, 500)
@@ -97,22 +130,32 @@ class SettingDialog(QWidget):
         horizontalLine.setGeometry(QRect(0, 0, 10, 3))
         horizontalLine.setFrameShape(QFrame.HLine)
         horizontalLine.setFrameShadow(QFrame.Plain)
-        horizontalLine.setContentsMargins(200, 0, 20, 0)
         self.mainLayout.addWidget(horizontalLine)
 
-    def addChildClass(self, className):
+    def addChildClass(self, className: str):
         button = QPushButton(className)
         childNumber = len(self.childOptionListWidget.children()) - 1
         col = childNumber // 3
         row = childNumber % 3
         self.childOptionListLayout.addWidget(button, col, row)
 
-    def addOperation(self, op):
+    def setChildrenClass(self, classNames: list):
+        for i in classNames:
+            self.addChildClass(i)
+
+    def addOperation(self, op: str):
         button = QPushButton(op)
-        childNumber = len(self.childOptionListWidget.children()) - 1
+        childNumber = len(self.operationOptionsWidget.children()) - 1
         col = childNumber // 3
         row = childNumber % 3
-        self.childOptionListLayout.addWidget(button, col, row)
+        self.operationOptionsLayout.addWidget(button, col, row)
+
+    def setOperations(self, operations: list):
+        for op in operations:
+            self.addOperation(op)
+
+
+# #############################################################
 
 
 class SingleClassButton(QPushButton):

@@ -1,4 +1,4 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QTimeLine
 from PyQt5.QtGui import QCursor, QPen, QColor
 
 from CustomWidgets import MyNode, MyLine, MyView, MyCanvas
@@ -124,15 +124,9 @@ class Canvas_BinaryTree(MyCanvas):
         else:
             self.workplace.logInfo.append('right connect == 0 ,error\n>>> ')
             return
-        self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
-            self.tempSt,
-            self.tempEd,
-            self,
-            f"line{str(self.lineCount)}",
-            self.rightConnect,
-        )
-
-        self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
+        self.lineDic["line" + str(self.lineCount)] = self.lineType(self.tempSt, self.tempEd, self,
+                                                                   "line" + str(self.lineCount), self.rightConnect)
+        self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
         self.tempSt = None
         self.tempEd = None
         self.lineCount += 1
@@ -145,13 +139,14 @@ class Canvas_BinaryTree(MyCanvas):
         if self.headNode is None:  # 没有头节点
             print("no head node!")
             return
+
         nowNode = self.headNode
         queue = []
         self.workplace.logInfo.append("result : ")
 
         def ergodic_preorder(node):
             queue.append(node)
-            self.workplace.logInfo.append(f"{node.text.text()} ")
+            self.workplace.logInfo.append(node.text.text() + " ")
             if len(node.lineList['left']) > 0:
                 queue.append(node.lineList['left'][0])
                 ergodic_preorder(node.lineList['left'][0].endNode)
@@ -164,7 +159,7 @@ class Canvas_BinaryTree(MyCanvas):
                 queue.append(node.lineList['left'][0])
                 ergodic_middle(node.lineList['left'][0].endNode)
             queue.append(node)
-            self.workplace.logInfo.append(f"{node.text.text()} ")
+            self.workplace.logInfo.append(node.text.text() + " ")
             if len(node.lineList['right']) > 0:
                 queue.append(node.lineList['right'][0])
                 ergodic_middle(node.lineList['right'][0].endNode)
@@ -177,7 +172,7 @@ class Canvas_BinaryTree(MyCanvas):
                 queue.append(node.lineList['right'][0])
                 ergodic_postorder(node.lineList['right'][0].endNode)
             queue.append(node)
-            self.workplace.logInfo.append(f"{node.text.text()} ")
+            self.workplace.logInfo.append(node.text.text() + " ")
 
         if mode == 1:
             ergodic_preorder(nowNode)
@@ -193,6 +188,7 @@ class Canvas_BinaryTree(MyCanvas):
         exceptList = ['null', '-1', 'Null', 'None']
 
         def fun(node, i, isRight=1):
+            print(i)
             gap_in = 20  # 节点间的间隔
             maxSize_in = (self.width() - MyNode.size) // gap_in + 1  # 一行最多结点个数
             minPadding_in = 5  # 防止上方溢出
@@ -239,47 +235,3 @@ class Canvas_BinaryTree(MyCanvas):
         if self.headNode is not None:
             self.headNode.setPen(QPen(QColor(255, 165, 0), 2))
 
-    def format(self):
-        nowPos = [self.size // 2, 0]
-        if self.headNode is None:
-            return
-        h = self.getDepth()
-        miniGap = 80
-        initGap = 2 ** (h - 3) * miniGap
-        nowNode = self.headNode
-
-        nowNode.setPos(nowPos[0], nowPos[1])
-
-        def setNowNodePos(node, posx, posy, devi):
-            gapy = 50
-            node.setPos(posx, posy + gapy)
-            node.init_pos = node.pos()
-            for i in node.lineList:
-                for j in node.lineList[i]:
-                    j.changePos()
-            self.view.viewport().update()
-            if len(node.lineList['left']) > 0:
-                setNowNodePos(node.lineList['left'][0].endNode, posx - devi // 2, posy + gapy, devi // 2)
-            if len(node.lineList['right']) > 0:
-                setNowNodePos(node.lineList['right'][0].endNode, posx + devi // 2, posy + gapy, devi // 2)
-
-        if len(nowNode.lineList['left']) > 0:
-            setNowNodePos(nowNode.lineList['left'][0].endNode, nowPos[0] - initGap, nowPos[1], initGap)
-        if len(nowNode.lineList['right']) > 0:
-            setNowNodePos(nowNode.lineList['right'][0].endNode, nowPos[0] + initGap, nowPos[1], initGap)
-
-    def getDepth(self):
-        # 为测试完全功能
-        if self.headNode is None:
-            return
-
-        def getDepths(node):
-            maxLeftDepth = 1
-            maxRightDepth = 1
-            if node.lineList['left']:
-                maxLeftDepth = 1 + getDepths(node.lineList['left'][0].endNode)
-            if node.lineList['right']:
-                maxRightDepth = 1 + getDepths(node.lineList['right'][0].endNode)
-            return max(maxLeftDepth, maxRightDepth)
-
-        return getDepths(self.headNode)

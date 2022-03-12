@@ -53,7 +53,7 @@ class SingleTabButton(QPushButton):
             )
         )
         if self.state == 0:
-            self.setText(self.title[:1] + "...")
+            self.setText(f'{self.title[:1]}...')
             self.setIcon(QIcon("%s/pic/minimizeButton.png" % Fundsettings.resource_path))
             self.resize(self.fold_width, self.myHeight)
         elif self.state == 1:
@@ -73,7 +73,6 @@ class SingleTabButton(QPushButton):
         self.nowColor = self.select_color
         self.myStyles()
         # self.workplace.setZValue(0)
-
 
 
 class MyAddButton(QPushButton):
@@ -157,7 +156,7 @@ class MyTab(QFrame):
                 i.myStyles()
 
     def addTab(self):
-        tab = SingleTabButton('hello' + str(self.index))
+        tab = SingleTabButton(f'hello{str(self.index)}')
         self.index += 1
         self.mainLayout.insertWidget(self.index, tab)
         tab.setVisible(True)

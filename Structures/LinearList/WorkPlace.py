@@ -22,9 +22,8 @@ class LogInfo_LinearList(MyLogInfo):
             for i in ls[1:]:
                 if com.match(i):
                     continue
-                else:
-                    self.append('no match')
-                    break
+                self.append('no match')
+                break
             else:
                 self.getWorkplace().canvas.insert(ls[1:])  # 需要用到画板的插入函数
         elif ls[0] == 'help':

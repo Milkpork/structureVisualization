@@ -1,4 +1,3 @@
-import re
 import sys
 
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
@@ -31,7 +30,7 @@ class LogInfo_LinearList(MyLogInfo):
 class RunButton_LinearList(MyRunButton):
     def __init__(self, workplace):
         super(RunButton_LinearList, self).__init__(workplace)
-        self.changeItems(['新建', '先序遍历', '中序遍历', '后序遍历'])
+        self.changeItems(['新建', '先序遍历', '中序遍历', '后序遍历', '格式化', '深度'])
 
     def menuSlot(self, t):
         if self.flag == 0:
@@ -46,13 +45,16 @@ class RunButton_LinearList(MyRunButton):
         elif t == '新建':
             self.getWorkplace().canvas.scene.addItem(self.getWorkplace().canvas.addNode())
             self.getWorkplace().canvas.nodeCount += 1
+        elif t == '格式化':
+            self.getWorkplace().canvas.format()
+        elif t == '深度':
+            self.workplace.logInfo.append("depth : " + str(self.getWorkplace().canvas.getDepth()) + "\n>>> ")
 
 
 class WorkPlace(QWidget):
 
     def __init__(self, t='Canvas', te='二叉树'):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
-
         self.title = t
         self.textEdition = te
 

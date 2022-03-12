@@ -364,25 +364,25 @@ class MyCanvas(QFrame):
         gap = 20  # 节点间的间隔
         maxSize = (self.width() - MyNode.size) // gap + 1  # 一行最多结点个数
         minPadding = 5  # 防止上方溢出
-        self.nodeDic["node" + str(self.nodeCount)] = self.nodeType(gap * (self.nodeCount % maxSize),
-                                                                   minPadding + gap * (self.nodeCount // maxSize),
-                                                                   str(self.nodeCount),
-                                                                   self,
-                                                                   "node" + str(self.nodeCount))
-        return self.nodeDic["node" + str(self.nodeCount)]
+        self.nodeDic[f"node{str(self.nodeCount)}"] = self.nodeType(
+            gap * (self.nodeCount % maxSize),
+            minPadding + gap * (self.nodeCount // maxSize),
+            str(self.nodeCount),
+            self,
+            f"node{str(self.nodeCount)}",
+        )
+
+        return self.nodeDic[f"node{str(self.nodeCount)}"]
 
     def addLine(self):
         pass
 
     def setHeadNode(self, node):
         # 设置头节点接口
-        if self.headNode is None:
-            self.headNode = node
-            node.setPen(QPen(QColor(255, 165, 0), 2))
-        else:
+        if self.headNode is not None:
             self.headNode.setPen(QPen(Qt.black, 2))
-            self.headNode = node
-            node.setPen(QPen(QColor(255, 165, 0), 2))
+        self.headNode = node
+        node.setPen(QPen(QColor(255, 165, 0), 2))
 
     # 以下是与输入框一同使用的指令
     # 需要重载:

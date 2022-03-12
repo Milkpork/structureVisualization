@@ -1,9 +1,5 @@
 def length(ls):
-    count = 0
-    for i in ls:
-        if i is not None:
-            count += 1
-    return count
+    return sum(i is not None for i in ls)
 
 
 class Fundsettings:
