@@ -126,7 +126,7 @@ class settingsMenu(QMenu):
 
     # 菜单对应的槽函数（事件）
     def menuSlot(self, ac: QAction):
-        pass
+        print(self.window.workplace.canvas)
 
 
 # 顶部条(主类)

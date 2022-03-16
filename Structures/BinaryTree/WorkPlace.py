@@ -25,8 +25,6 @@ class LogInfo_LinearList(MyLogInfo):
             self.append('\nno such order')
 
 
-# insert 1 2 3 null null null null
-
 class RunButton_LinearList(MyRunButton):
     def __init__(self, workplace):
         super(RunButton_LinearList, self).__init__(workplace)

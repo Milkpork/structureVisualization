@@ -149,7 +149,7 @@ class Canvas_LinearList(MyCanvas):
             self.nodeCount += 1
 
         for i in range(st, self.nodeCount - 1):
-            self.lineDic[f"line{str(self.lineCount)}"] = Line_LinearList(
+            self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
                 self.nodeDic[f"node{str(i)}"],
                 self.nodeDic[f"node{str(i + 1)}"],
                 self,

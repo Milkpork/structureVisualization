@@ -72,7 +72,7 @@ class SingleTabButton(QPushButton):
     def select(self):
         self.nowColor = self.select_color
         self.myStyles()
-        # self.workplace.setZValue(0)
+        # self.workplace.setZValue(1)
 
 
 class MyAddButton(QPushButton):

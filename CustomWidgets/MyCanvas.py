@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt, QPointF, QLineF, QTimeLine
 from PyQt5.QtGui import QPen, QBrush, QColor, QFont, QCursor, QPainter, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QApplication, \
-    QVBoxLayout, QGraphicsItem, QGraphicsSimpleTextItem, QMenu, QGraphicsLineItem, QFrame
+    QVBoxLayout, QGraphicsItem, QGraphicsSimpleTextItem, QMenu, QGraphicsLineItem, QFrame, QInputDialog
 from CustomWidgets.Fundsettings import Fundsettings
 
 
@@ -65,7 +65,10 @@ class MyNode(QGraphicsEllipseItem):
 
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
-        print(self.pos())
+        age, ok = QInputDialog.getInt(self.canvas.workplace, '整数输入框', '请输入年龄', min=0, max=100)
+        if age and ok:
+            self.text.setText(f"{age}")
+            self.myTextSettings()
 
     # 需要重载:移动
     def mouseMoveEvent(self, event):
@@ -126,6 +129,7 @@ class MyLine(QGraphicsLineItem):
 
         self.startNode = sn  # 头节点
         self.endNode = en  # 尾结点
+
         self.canvas = c
         self.name = n
         self.nowStyles = Fundsettings.normalStyles
