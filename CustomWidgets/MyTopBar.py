@@ -126,7 +126,8 @@ class settingsMenu(QMenu):
 
     # 菜单对应的槽函数（事件）
     def menuSlot(self, ac: QAction):
-        print(self.window.workplace.canvas)
+        # print(self.window.workplace.canvas)
+        pass
 
 
 # 顶部条(主类)
@@ -134,12 +135,14 @@ class MyTopBar(QWidget):
     bc_color = (90, 90, 90)  # 背景颜色
     fix_height = 40  # 固定高度
 
-    def __init__(self, wind: QMainWindow, settingExists: bool = True):
+    def __init__(self, wind: QMainWindow, buttonExists: list = None):
         """
         注意：使用本工具条会自动为窗口设置为FramelessWindowHint
         第一个参数用于设置该顶部条的窗口是哪个
         第二个参数True表示需要设置按钮，False为不显示设置按钮
         """
+        if buttonExists is None:
+            buttonExists = [1, 1, 1, 1]
         super(MyTopBar, self).__init__()
         self.window = wind
         self.m_flag = False
@@ -152,13 +155,25 @@ class MyTopBar(QWidget):
         self.settingButton = settingButton(self.window)
         self.settingsMenu = settingsMenu(self.window)
 
-        if not settingExists:
-            self.setting.setVisible(False)
+        # if not settingExists:
+        #     self.settingButton.setVisible(False)
+        self.judge(buttonExists)  # 用于判断是有需要按钮
 
         self.mySettings()
         self.myLayouts()
         self.mySignalConnections()
         self.myStyles()
+
+    # noinspection PyAttributeOutsideInit
+    def judge(self, buttonExists):
+        if buttonExists[1] * buttonExists[2] == 0:
+            def funtemp(event):
+                pass
+
+            self.mouseDoubleClickEvent = funtemp
+        button = [self.settingButton, self.miniButton, self.maxiButton, self.exitButton]
+        for i in range(4):
+            button[i].setVisible(buttonExists[i])
 
     def mySettings(self):
         # 设置固定高度

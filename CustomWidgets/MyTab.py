@@ -4,7 +4,8 @@ from PyQt5.QtCore import QPropertyAnimation, QSize
 from PyQt5.QtGui import QPalette, QColor, QIcon
 from PyQt5.QtWidgets import QFrame, QPushButton, QApplication, QVBoxLayout, QMainWindow
 
-from CustomWidgets import Fundsettings
+from CustomWidgets.Fundsettings import Fundsettings
+from CustomWidgets.MyNewWindow import MyNewWindow
 
 
 class SizeAnimation(QPropertyAnimation):
@@ -155,12 +156,15 @@ class MyTab(QFrame):
                 i.state = 0
                 i.myStyles()
 
+    # noinspection PyAttributeOutsideInit
     def addTab(self):
-        tab = SingleTabButton(f'hello{str(self.index)}')
-        self.index += 1
-        self.mainLayout.insertWidget(self.index, tab)
-        tab.setVisible(True)
-        tab.clicked.connect(self.selectTab)
+        self.windows = MyNewWindow()
+        # self.windows.show()
+        # tab = SingleTabButton(f'hello{str(self.index)}')
+        # self.index += 1
+        # self.mainLayout.insertWidget(self.index, tab)
+        # tab.setVisible(True)
+        # tab.clicked.connect(self.selectTab)
 
     def selectTab(self):
         if self.nowWorkPlace is not None:
