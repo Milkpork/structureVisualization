@@ -1,6 +1,7 @@
 import re
 import sys
 
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
 from CustomWidgets import MyInfo, MyLogInfo, MyRunButton
 from Structures.LinearList.LinearList_Canvas import Canvas_LinearList
@@ -18,7 +19,9 @@ class LogInfo_LinearList(MyLogInfo):
     def proOrder(self, order):
         ls = order.split()
         if ls[0] == 'insert':
-            com = re.compile(r'^\d\d?$')  # 通过正则检擦是否为两位数
+            if len(ls) < 2:
+                return
+            com = re.compile(r'^\d\d?\d?$')  # 通过正则检擦是否为两位数
             for i in ls[1:]:
                 if com.match(i):
                     continue
@@ -34,9 +37,9 @@ class LogInfo_LinearList(MyLogInfo):
 
 
 class RunButton_LinearList(MyRunButton):
-    def __init__(self, workplace):
+    def __init__(self, workplace, ls):
         super(RunButton_LinearList, self).__init__(workplace)
-        self.changeItems(['新建', '遍历', '格式化'])
+        self.changeItems(ls)
 
     def menuSlot(self, t):
         if self.flag == 0:
@@ -45,24 +48,27 @@ class RunButton_LinearList(MyRunButton):
         if t == '遍历':
             self.getWorkplace().canvas.ergodic()
         elif t == '新建':
-            self.getWorkplace().canvas.scene.addItem(self.getWorkplace().canvas.addNode())
-            self.getWorkplace().canvas.nodeCount += 1
+            self.getWorkplace().canvas.addNode(self.getWorkplace().canvas.nodeCount)
         elif t == '格式化':
             self.getWorkplace().canvas.format()
 
 
 class WorkPlace(QWidget):
 
-    def __init__(self, t='Canvas', te='线性表'):  # 参数为text和textEdition
+    def __init__(self, t='Canvas', te='线性表', ls=None):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
 
+        if ls is None:
+            ls = []
+        self.edition = "线性表"
         self.title = t
         self.textEdition = te
+        self.funcList = ls
 
         # 组件
         self.info = Info_LinearList(self.title, self.textEdition)
         self.canvas = Canvas_LinearList(self)
-        self.runButton = RunButton_LinearList(self)
+        self.runButton = RunButton_LinearList(self, ls)
         self.logInfo = LogInfo_LinearList(self)
 
         self.mainWidget = QWidget()
@@ -119,14 +125,19 @@ class WorkPlace(QWidget):
         self.layout3.addWidget(self.runButton)
 
     def mySettings(self):
+        self.setMinimumSize(800, 600)
         self.resize(800, 600)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.layout2.setContentsMargins(20, 0, 0, 20)
         self.layout3.setContentsMargins(0, 0, 0, 0)
+        self.setAutoFillBackground(True)
+        palette = QPalette()
+        palette.setBrush(QPalette.Background, QColor(255, 255, 255))
+        self.setPalette(palette)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = WorkPlace('canvas', 'LinearList')
+    win = WorkPlace('canvas', 'LinearList', ['新建', '遍历', '格式化'])
     win.show()
     sys.exit(app.exec_())

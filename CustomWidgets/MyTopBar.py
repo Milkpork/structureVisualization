@@ -1,13 +1,14 @@
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QCursor, QPalette, QColor, QMouseEvent, QFont
-from PyQt5.QtWidgets import QWidget, QPushButton, QHBoxLayout, QMenu, QApplication, QMainWindow, QAction
-from CustomWidgets.Fundsettings import Fundsettings
+from PyQt5.QtGui import QCursor, QMouseEvent, QFont
+from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QMenu, QApplication, QMainWindow, QAction, QFileDialog, \
+    QFrame
+from CustomWidgets.Fundsettings import Fundsettings, FundColor
 
 
 # 按钮基类
 class TopBarButton(QPushButton):
     radius = 20  # 半径
-    hover_color = "#999"  # hover的颜色
+    hover_color = FundColor.buttonHoverColor  # hover的颜色
 
     def __init__(self, window: QMainWindow = None):
         super(TopBarButton, self).__init__()
@@ -53,6 +54,9 @@ class maximizeButton(TopBarButton):
             self.window.showNormal()
         else:
             self.window.setWindowState(Qt.WindowFullScreen)
+        workplace = self.window.workplace
+        for i in workplace.children():
+            i.resize(workplace.width(), workplace.height())
 
 
 class exitButton(TopBarButton):
@@ -118,21 +122,97 @@ class settingsMenu(QMenu):
         self.addAction('保存')
         self.addAction('导入')
         self.addSeparator()
-        self.addAction('设置')
+        self.addAction('关闭')
 
     # 展示菜单
     def showMenu(self):
-        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + 40))  # 在setting按钮下方展示
+        self.exec_(QPoint(self.window.pos().x(), self.window.pos().y() + MyTopBar.fix_height - 1))  # 在setting按钮下方展示
 
     # 菜单对应的槽函数（事件）
     def menuSlot(self, ac: QAction):
-        # print(self.window.workplace.canvas)
-        pass
+        if ac.text() == "新建":
+            self.window.nav.addTab()
+        elif ac.text() == "保存":
+            self.saveFunc()
+        elif ac.text() == "导入":
+            self.loadFunc()
+
+    def saveFunc(self):
+        workplace = self.window.nav.getNowWorkplace()
+        if workplace is None:
+            return
+        title = workplace.title
+        edition = workplace.textEdition
+        funcList = workplace.funcList
+
+        canv = workplace.canvas
+        node = {}
+        line = {}
+        hnode = None
+        canvType = workplace.edition
+        index = 0
+        for i in canv.nodeDic:
+            node[canv.nodeDic[i]] = [f"{index}", canv.nodeDic[i].text.text()]
+            index += 1
+        for i in canv.lineDic:
+            if line.get(node[canv.lineDic[i].startNode][0], -1) == -1:
+                line[node[canv.lineDic[i].startNode][0]] = []
+            line[node[canv.lineDic[i].startNode][0]].append(
+                [node[canv.lineDic[i].endNode][0], canv.lineDic[i].stlistName,
+                 canv.lineDic[i].edlistName])
+        if canv.headNode is not None:
+            hnode = node[canv.headNode][0]
+        pos = {}
+        for i in node:
+            pos[node[i][0]] = (i.pos().x(), i.pos().y())
+
+        node_res = {}
+        for i in node.values():
+            node_res[i[0]] = i[1]
+        resText = f"<type> {canvType}\n<title> {title}\n<edition> {edition}\n<functions> {funcList}\n<node> {node_res}\n<connections> {line}\n<headNode> {hnode}\n<positions> {pos}"
+        fname, ok = QFileDialog.getSaveFileName(self, "文件保存", "./", "Text Files(*.stru)")
+        if ok:
+            with open(fname, 'w+', encoding='utf8') as f:
+                f.write(resText)
+
+    def loadFunc(self):
+        try:
+            fname, ok = QFileDialog.getOpenFileName(self, "选取文件", "./", "Text Files (*.stru)")
+            if ok:
+                orderDic = {}
+                with open(fname, "r", encoding="utf8") as f:
+                    content = f.readline()
+                    while content:
+                        order = content.rstrip("\n").split(" ", 1)
+                        if len(order) < 2:
+                            order += [""]
+                        orderDic[order[0]] = order[1]
+                        content = f.readline()
+
+                types = orderDic['<type>']
+                title = orderDic["<title>"]
+                edition = orderDic["<edition>"]
+                function = eval(orderDic["<functions>"])
+                nodeDict = eval(orderDic["<node>"])
+                connectDict = eval(orderDic["<connections>"])
+                head = orderDic["<headNode>"]
+                posDict = eval(orderDic["<positions>"])
+                self.window.nav.addTabAppoint(types, title, edition, function)
+                canv = self.window.nav.getNowWorkplace().canvas
+                for i in nodeDict:
+                    canv.addNode(nodeDict[i], posDict[i][0], posDict[i][1])
+                for i in connectDict:
+                    for j in connectDict[i]:
+                        canv.addLine(canv.nodeDic[f"node{i}"], canv.nodeDic[f"node{j[0]}"], j[1], j[2])
+                canv.setHeadNode(canv.nodeDic[f"node{head}"])
+
+        except:
+            pass
 
 
 # 顶部条(主类)
-class MyTopBar(QWidget):
-    bc_color = (90, 90, 90)  # 背景颜色
+class MyTopBar(QFrame):
+    bc_color = FundColor.topbarBackgroundColor  # 背景颜色
     fix_height = 40  # 固定高度
 
     def __init__(self, wind: QMainWindow, buttonExists: list = None):
@@ -144,6 +224,11 @@ class MyTopBar(QWidget):
         if buttonExists is None:
             buttonExists = [1, 1, 1, 1]
         super(MyTopBar, self).__init__()
+        self.setStyleSheet(
+            "QFrame{background-color: %s;border:1px solid white;}" % (
+                self.bc_color
+            )
+        )
         self.window = wind
         self.m_flag = False
         self.m_Position = None
@@ -164,12 +249,13 @@ class MyTopBar(QWidget):
         self.mySignalConnections()
         self.myStyles()
 
-    # noinspection PyAttributeOutsideInit
     def judge(self, buttonExists):
         if buttonExists[1] * buttonExists[2] == 0:
+            # noinspection PyUnusedLocal
             def funtemp(event):
                 pass
 
+            # noinspection PyAttributeOutsideInit
             self.mouseDoubleClickEvent = funtemp
         button = [self.settingButton, self.miniButton, self.maxiButton, self.exitButton]
         for i in range(4):
@@ -196,12 +282,6 @@ class MyTopBar(QWidget):
         self.settingButton.clicked.connect(self.settingsMenu.showMenu)
 
     def myStyles(self):
-        # 设置背景颜色
-        self.setAutoFillBackground(True)
-        palette = QPalette()
-        palette.setBrush(QPalette.Background, QColor(*self.bc_color))
-        self.setPalette(palette)
-
         # 设置窗口为无边框样式
         self.window.setWindowFlags(Qt.FramelessWindowHint)
 
@@ -236,6 +316,9 @@ class MyTopBar(QWidget):
             self.window.showNormal()
         else:
             self.window.setWindowState(Qt.WindowFullScreen)  # 全屏
+        workplace = self.window.workplace
+        for i in workplace.children():
+            i.resize(workplace.width(), workplace.height())
 
 
 if __name__ == '__main__':

@@ -5,17 +5,21 @@ from CustomWidgets import MyNode, MyLine, MyView, MyCanvas
 
 
 class Node_BinaryTree(MyNode):
+    in_limit = 1
+    out_limit = 1
+
     def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板
         super(Node_BinaryTree, self).__init__(a, b, t, c, n)
         self.lineList = {'left': [], 'right': [], 'previous': []}
 
-    def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
-        self.init_pos = self.pos()
-        for i in self.lineList:
-            for j in self.lineList[i]:
-                j.changePos()
-        self.canvas.view.viewport().update()
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if self.canvas.cursor() == QCursor(Qt.CrossCursor):
+            self.canvas.tempEd = self
+            if self.canvas.rightConnect == -1:
+                self.canvas.addLine(self.canvas.tempSt, self.canvas.tempEd, 'left', 'previous')
+            elif self.canvas.rightConnect == 1:
+                self.canvas.addLine(self.canvas.tempSt, self.canvas.tempEd, 'right', 'previous')
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -61,16 +65,8 @@ class Node_BinaryTree(MyNode):
 
 
 class Line_BinaryTree(MyLine):
-    def __init__(self, sn=None, en=None, c=None, n=None, right=1):
-        self.isright = right
-        super(Line_BinaryTree, self).__init__(sn, en, c, n)
-
-    def addNodeLine(self):
-        if self.isright == 1:
-            self.startNode.lineList['right'].append(self)
-        else:
-            self.startNode.lineList['left'].append(self)
-        self.endNode.lineList['previous'].append(self)
+    def __init__(self, sn=None, en=None, c=None, n=None, stlistName=None, edlistName=None):
+        super(Line_BinaryTree, self).__init__(sn, en, c, n, stlistName, edlistName)
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -78,16 +74,6 @@ class Line_BinaryTree(MyLine):
     def menuSlot(self, ac):
         if ac.text() == '删除':
             self.delete()
-
-    def delete(self):
-        # 删除画布字典中的自己
-        del self.canvas.lineDic[self.name]
-        if self.isright == 1:
-            self.startNode.lineList['right'] = []
-        else:
-            self.startNode.lineList['left'] = []
-        self.endNode.lineList['previous'] = []
-        self.canvas.scene.removeItem(self)  # 删除自身
 
 
 class View_BinaryTree(MyView):
@@ -99,46 +85,6 @@ class Canvas_BinaryTree(MyCanvas):
     def __init__(self, workplace=None):
         super(Canvas_BinaryTree, self).__init__(Node_BinaryTree, Line_BinaryTree, View_BinaryTree, workplace)
         self.rightConnect = 0
-
-    def addLine(self):
-        if self.tempSt == self.tempEd:
-            return
-        if self.rightConnect == 1:
-            if len(self.tempSt.lineList['right']) == 1 or len(
-                    self.tempEd.lineList['previous']) == 1:
-                self.workplace.logInfo.append('out of limit\n>>> ')
-                self.setCursor(QCursor(Qt.ArrowCursor))
-                self.tempSt = None
-                self.tempEd = None
-                self.rightConnect = 0
-                return
-        elif self.rightConnect == -1:
-            if len(self.tempSt.lineList['left']) == 1 or len(
-                    self.tempEd.lineList['previous']) == 1:
-                self.workplace.logInfo.append('out of limit\n>>> ')
-                self.setCursor(QCursor(Qt.ArrowCursor))
-                self.tempSt = None
-                self.tempEd = None
-                self.rightConnect = 0
-                return
-        else:
-            self.workplace.logInfo.append('right connect == 0 ,error\n>>> ')
-            return
-        self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
-            self.tempSt,
-            self.tempEd,
-            self,
-            f"line{str(self.lineCount)}",
-            self.rightConnect,
-        )
-
-        self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
-        self.tempSt = None
-        self.tempEd = None
-        self.lineCount += 1
-        self.rightConnect = 0
-
-        self.setCursor(QCursor(Qt.ArrowCursor))
 
     def ergodic(self, mode):
         # 遍历
@@ -193,25 +139,17 @@ class Canvas_BinaryTree(MyCanvas):
         exceptList = ['null', '-1', 'Null', 'None']
 
         def fun(node, i, isRight=1):
-            gap_in = 20  # 节点间的间隔
-            maxSize_in = (self.width() - MyNode.size) // gap_in + 1  # 一行最多结点个数
-            minPadding_in = 5  # 防止上方溢出
-            self.nodeDic["node" + str(self.nodeCount)] = self.nodeType(gap_in * (self.nodeCount % maxSize_in),
-                                                                       minPadding_in + gap_in * (
-                                                                               self.nodeCount // maxSize_in),
-                                                                       ls[i], self, "node" + str(self.nodeCount))
-            self.scene.addItem(self.nodeDic["node" + str(self.nodeCount)])
+            no = self.addNode(ls[i])
             if node is not None:
                 self.lineDic["line" + str(self.lineCount)] = self.lineType(node,
-                                                                           self.nodeDic[
-                                                                               "node" + str(self.nodeCount)],
+                                                                           no,
                                                                            self,
                                                                            "line" + str(self.lineCount),
-                                                                           isRight)
+                                                                           "right" if isRight == 1 else "left",
+                                                                           "previous")
                 self.scene.addItem(self.lineDic["line" + str(self.lineCount)])
                 self.lineCount += 1
-            nodeindex = self.nodeCount
-            self.nodeCount += 1
+            nodeindex = self.nodeCount - 1
             if i * 2 + 1 < len(ls) and ls[i * 2 + 1] not in exceptList:
                 fun(self.nodeDic["node" + str(nodeindex)], i * 2 + 1, -1)
             if i * 2 + 2 < len(ls) and ls[i * 2 + 2] not in exceptList:

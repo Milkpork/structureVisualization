@@ -1,23 +1,24 @@
 import sys
 
+from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
 from CustomWidgets import MyInfo, MyLogInfo, MyRunButton
 from Structures.Graph.Graph_Canvas import Canvas_Graph
 
 
-class Info_LinearList(MyInfo):
+class Info_Graph(MyInfo):
     def __init__(self, title='test', edition='testEdition'):
-        super(Info_LinearList, self).__init__(title, edition)
+        super(Info_Graph, self).__init__(title, edition)
 
 
-class LogInfo_LinearList(MyLogInfo):
+class LogInfo_Graph(MyLogInfo):
     def __init__(self, canvas):
-        super(LogInfo_LinearList, self).__init__(canvas)
+        super(LogInfo_Graph, self).__init__(canvas)
 
     def proOrder(self, order):
         ls = order.split()
         if ls[0] == 'insert':
-            self.getWorkplace().canvas.insert(ls[1:])  # 需要用到画板的插入函数
+            self.append("\ngraph do not has insert")
         elif ls[0] == 'help':
             self.append('\n1.(insert [num] [num] ... ) can insert')
             self.append('\n2.more are going to append...')
@@ -25,38 +26,41 @@ class LogInfo_LinearList(MyLogInfo):
             self.append('\nno such order')
 
 
-# insert 1 2 3 null null null null
-
-class RunButton_LinearList(MyRunButton):
-    def __init__(self, workplace):
-        super(RunButton_LinearList, self).__init__(workplace)
-        self.changeItems(['新建', 'dfs', 'bfs'])
+# ['新建', '深度优先', '广度优先']
+class RunButton_Graph(MyRunButton):
+    def __init__(self, workplace, ls):
+        super(RunButton_Graph, self).__init__(workplace)
+        self.changeItems(ls)
 
     def menuSlot(self, t):
         if self.flag == 0:
             self.flag = 1
             return
-        if t == 'dfs':
+        if t == '深度优先':
             self.getWorkplace().canvas.ergodic(0)
-        elif t == 'bfs':
+        elif t == "广度优先":
             self.getWorkplace().canvas.ergodic(1)
         elif t == '新建':
-            self.getWorkplace().canvas.scene.addItem(self.getWorkplace().canvas.addNode())
-            self.getWorkplace().canvas.nodeCount += 1
+            self.getWorkplace().canvas.addNode(self.getWorkplace().canvas.nodeCount)
 
 
 class WorkPlace(QWidget):
 
-    def __init__(self, t='Canvas', te='二叉树'):  # 参数为text和textEdition
+    def __init__(self, t='Canvas', te='线性表', ls=None):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
+
+        if ls is None:
+            ls = []
+        self.edition = "图"
         self.title = t
         self.textEdition = te
+        self.funcList = ls
 
         # 组件
-        self.info = Info_LinearList(self.title, self.textEdition)
+        self.info = Info_Graph(self.title, self.textEdition)
         self.canvas = Canvas_Graph(self)
-        self.runButton = RunButton_LinearList(self)
-        self.logInfo = LogInfo_LinearList(self)
+        self.runButton = RunButton_Graph(self, ls)
+        self.logInfo = LogInfo_Graph(self)
 
         self.mainWidget = QWidget()
         self.mainLayout = QHBoxLayout()  # 主布局，分割输入框
@@ -112,14 +116,19 @@ class WorkPlace(QWidget):
         self.layout3.addWidget(self.runButton)
 
     def mySettings(self):
+        self.setMinimumSize(800, 600)
         self.resize(800, 600)
         self.mainLayout.setContentsMargins(0, 0, 0, 0)
         self.layout2.setContentsMargins(20, 0, 0, 20)
         self.layout3.setContentsMargins(0, 0, 0, 0)
+        self.setAutoFillBackground(True)
+        palette = QPalette()
+        palette.setBrush(QPalette.Background, QColor(255, 255, 255))
+        self.setPalette(palette)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = WorkPlace('canvas', 'Graph')
+    win = WorkPlace('canvas', 'Graph', ['新建', '深度优先', '广度优先'])
     win.show()
     sys.exit(app.exec_())

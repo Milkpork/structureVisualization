@@ -1,39 +1,53 @@
 import sys
 
 from PyQt5.QtCore import QRect, Qt, pyqtSignal
-from PyQt5.QtGui import QIcon, QPalette, QColor, QPainter, QFont
+from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QMainWindow, QApplication, QFrame, \
-    QVBoxLayout, QHBoxLayout, QGridLayout, QStyleOption, QStyle
-
-from CustomWidgets import Fundsettings, MyTopBar
+    QVBoxLayout, QHBoxLayout, QGridLayout
+from CustomWidgets import Fundsettings, MyTopBar, FundColor
 
 
 # 提交按钮
 class SubmitButton(QPushButton):
+    bc_color = FundColor.submitButtonBackgroundColor
+    press_color = FundColor.submitButtonPressColor
+
     def __init__(self, text: str):
         super(SubmitButton, self).__init__(text)
         self.setStyleSheet(
-            "SubmitButton {color:black;background-color: #884;border:1px solid black;}"
-            "SubmitButton:pressed{background-color:red}"
+            "SubmitButton {color:black;background-color: %s;border:1px solid black;}"
+            "SubmitButton:pressed{background-color:%s}" % (
+                self.bc_color, self.press_color
+            )
         )
-
-    def mouseReleaseEvent(self, event):
-        super().mouseReleaseEvent(event)
 
 
 # 关闭按钮
 class CloseButton(QPushButton):
-    def __init__(self):
-        super(CloseButton, self).__init__()
+    bc_color = FundColor.submitButtonBackgroundColor
+    press_color = FundColor.submitButtonPressColor
+
+    def __init__(self, text: str):
+        super(CloseButton, self).__init__(text)
+        self.setStyleSheet(
+            "CloseButton {color:black;background-color: %s;border:1px solid black;}"
+            "CloseButton:pressed{background-color:%s}" % (
+                self.bc_color, self.press_color
+            )
+        )
 
 
 # 功能选择项
 class OperationsOptionsButton(QPushButton):
+    font_size = 15
+
     def __init__(self, text=''):
         super(OperationsOptionsButton, self).__init__(text)
         self.hasSelected = False
         self.setStyleSheet(
-            "OperationsOptionsButton {border:2px solid gray;background-color:transparent;border-radius:6px}"
+            "OperationsOptionsButton {border:2px solid %s;background-color:%s;border-radius:6px;font-size:%dpx}" % (
+                FundColor.optionBorderColor, FundColor.optionsBackgroundColor, self.font_size
+            )
         )
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedSize(80, 50)
@@ -41,11 +55,15 @@ class OperationsOptionsButton(QPushButton):
     def changeStyle(self):
         if not self.hasSelected:
             self.setStyleSheet(
-                "OperationsOptionsButton {border:2px solid gray;background-color:rgba(150, 150, 150,1);border-radius:6px}"
+                "OperationsOptionsButton {background-color:%s;border-radius:6px;border:2px solid %s;font-size:%dpx}" % (
+                    FundColor.optionsSelectColor, FundColor.optionBorderColor, self.font_size
+                )
             )
         else:
             self.setStyleSheet(
-                "OperationsOptionsButton {border:2px solid gray;background-color:transparent;border-radius:6px}"
+                "OperationsOptionsButton {background-color:%s;border-radius:6px;border:2px solid %s;font-size:%dpx}" % (
+                    FundColor.optionsBackgroundColor, FundColor.optionBorderColor, self.font_size
+                )
             )
         self.hasSelected = not self.hasSelected
 
@@ -71,11 +89,15 @@ class OperationOptionsWidget(QWidget):
 
 # 小类选择项
 class ClassOptionsButton(QPushButton):
+    font_size = 15
+
     def __init__(self, text=""):
         super(ClassOptionsButton, self).__init__(text)
         self.hasSelected = 0
         self.setStyleSheet(
-            "ClassOptionsButton {background-color:transparent;border-radius:6px;border:2px solid gray;}"
+            "ClassOptionsButton {border:2px solid %s;background-color:%s;border-radius:6px;font-size:%dpx}" % (
+                FundColor.optionBorderColor, FundColor.optionsBackgroundColor, self.font_size
+            )
         )
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedSize(80, 50)
@@ -83,11 +105,15 @@ class ClassOptionsButton(QPushButton):
     def changeStyle(self):
         if not self.hasSelected:
             self.setStyleSheet(
-                "ClassOptionsButton {background-color:rgba(150, 150, 150,1);border-radius:6px;border:2px solid gray;}"
+                "ClassOptionsButton {background-color:%s;border-radius:6px;border:2px solid %s;font-size:%dpx}" % (
+                    FundColor.optionsSelectColor, FundColor.optionBorderColor, self.font_size
+                )
             )
         else:
             self.setStyleSheet(
-                "ClassOptionsButton {background-color:transparent;border-radius:6px;border:2px solid gray;}"
+                "ClassOptionsButton {background-color:%s;border-radius:6px;border:2px solid %s;font-size:%dpx}" % (
+                    FundColor.optionsBackgroundColor, FundColor.optionBorderColor, self.font_size
+                )
             )
         self.hasSelected = not self.hasSelected
 
@@ -117,24 +143,12 @@ class ChildOptionListWidget(QWidget):
 
 
 # 输入框
-class InputWidget(QWidget):
+class InputWidget(QFrame):
+    bc_color = FundColor.inputHoverBackgroundColor
+
     def __init__(self, inputs):
         super(InputWidget, self).__init__()
         self.inputs = inputs
-        self.setStyleSheet(
-            "InputWidget{background:transparent;}"
-            "InputWidget:hover{background:rgba(155,155,155,.7);}"
-        )
-
-    def mouseReleaseEvent(self, event):
-        super(InputWidget, self).mouseReleaseEvent(event)
-        self.inputs.setFocus()
-
-    def paintEvent(self, event):
-        opt = QStyleOption()
-        opt.initFrom(self)
-        p = QPainter(self)
-        self.style().drawPrimitive(QStyle.PE_Widget, opt, p, self)
 
     def text(self):
         return self.inputs.text()
@@ -144,32 +158,39 @@ class InputEdit(QLineEdit):
     def __init__(self):
         super(InputEdit, self).__init__()
         self.setStyleSheet(
-            "InputEdit{background-color: transparent;border:2px solid #8B8970;height:25px;}"
+            "InputEdit{background-color: transparent;border:2px solid %s;height:25px;}" % (
+                FundColor.inputBorderColor
+            )
         )
         self.setAlignment(Qt.AlignRight)
 
     def focusInEvent(self, event):
         self.setStyleSheet(
-            "InputEdit{background-color: transparent;border:2px solid #EEE5DE;height:25px;}"
+            "InputEdit{background-color: transparent;border:2px solid %s;height:25px;}" % (
+                FundColor.inputSelectBorderColor
+            )
         )
 
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
         self.setStyleSheet(
-            "InputEdit{background-color: transparent;border:2px solid #8B8970;height:25px;}"
-
+            "InputEdit{background-color: transparent;border:2px solid %s;height:25px;}" % (
+                FundColor.inputBorderColor
+            )
         )
 
 
-class SettingDialog(QWidget):
+class SettingDialog(QFrame):
     submitted = pyqtSignal(dict)
+    bc_color = FundColor.settingDialogBackgroundColor
 
     # 对话框基类
     def __init__(self):
         super(SettingDialog, self).__init__()
         self.setStyleSheet(
-            "QWidget{color:rgba(224,255,255,1)}"
-
+            "color:black;background-color:%s" % (
+                self.bc_color
+            )
         )
 
         self.mainLayout = QVBoxLayout()
@@ -186,13 +207,13 @@ class SettingDialog(QWidget):
 
         self.childOptionWapper = QWidget()
         self.childOptionWapperLayout = QVBoxLayout()
-        self.childLabel = QLabel('请选择子类')
+        self.childLabel = QLabel('请选择子类(必选1)')
         self.childOptionListWidget = ChildOptionListWidget()
         self.childOptionListLayout = QGridLayout()
 
         self.operationOptionsWapper = QWidget()
         self.operationOptionsWapperLayout = QVBoxLayout()
-        self.operationLabel = QLabel('请添加需要的功能')
+        self.operationLabel = QLabel('请添加需要的功能(任选1-多个)')
         self.operationOptionsWidget = OperationOptionsWidget()
         self.operationOptionsLayout = QGridLayout()
 
@@ -207,10 +228,8 @@ class SettingDialog(QWidget):
 
     def mySettings(self):
         self.resize(450, 500)
-        self.setAutoFillBackground(True)
-        palette = QPalette()
-        palette.setBrush(QPalette.Background, QColor(30, 34, 40))
-        self.setPalette(palette)
+        self.titleInput.setPlaceholderText("标题,必填")
+        self.detailInput.setPlaceholderText("描述,选填")
 
     def myLayouts(self):
         font_size = 16  # 字体大小
@@ -290,7 +309,7 @@ class SettingDialog(QWidget):
         self.mainLayout.addWidget(horizontalLine)
 
     def addChildClass(self, className: str):
-        maxSize = 4
+        maxSize = 3
         button = ClassOptionsButton(className)
         childNumber = len(self.childOptionListWidget.children()) - 1
         col = childNumber // maxSize
@@ -317,12 +336,11 @@ class SettingDialog(QWidget):
         self.operationOptionsWidget.mySignalConnections()
 
     def submitButtonEvent(self):
-        self.getInfo(self)
-        # wind = self.parent()
-        # while type(wind) != MyNewWindow:
-        #     wind = wind.parent()
-        # else:
-        #     wind.close()
+        infoDic = self.getInfo(self)
+        if len(infoDic['title']) > 0 and infoDic['class'] is not None and len(infoDic["options"]) > 0:
+            self.submitted.emit(infoDic)
+        else:
+            print("error")
 
     def closeButtonEvent(self):
         print("close")
@@ -337,13 +355,14 @@ class SettingDialog(QWidget):
         super().closeEvent(event)
         print("close2")
 
-    def getInfo(self, dia):
+    @staticmethod
+    def getInfo(dia):
         infoDic = {"title": dia.titleInput.text(),
                    "detail": dia.detailInput.text(),
                    "class": None if dia.childOptionListWidget.nowSelectedOption is None else dia.childOptionListWidget.nowSelectedOption.text(),
                    "options": [i.text() for i in dia.operationOptionsWidget.nowSelectedOption]
                    }
-        self.submitted.emit(infoDic)
+        return infoDic
 
 
 # #############################################################
@@ -364,9 +383,12 @@ class SingleClassButton(QPushButton):
         self.setText(self.title)
         self.setIcon(QIcon("%s/pic/minimizeButton.png" % Fundsettings.resource_path))
         self.setStyleSheet(
-            "SingleClassButton{margin:-1px 0;background-color:transparent;height:40px;border:1px solid transparent}"
-            "SingleClassButton{font-size:16px;font_family:楷体;text-align:left;color:white}"
-            "SingleClassButton:pressed{background-color:yellow}"
+            "SingleClassButton{margin:-1px 0;background-color:%s;height:40px;border:1px solid transparent}"
+            "SingleClassButton{font-size:16px;font-family:%s;text-align:left;color:white}"
+            "SingleClassButton:pressed{background-color:%s}" % (
+                FundColor.singleClassButtonBackgroundColor, Fundsettings.font_family,
+                FundColor.singleClassButtonSelectColor
+            )
         )
 
     def setWorkplace(self, workplace):
@@ -374,18 +396,23 @@ class SingleClassButton(QPushButton):
 
     def workplaceDisplay(self):
         self.setStyleSheet(
-            "SingleClassButton{margin:-1px 0;background-color:yellow;height:40px;border:1px solid transparent}"
-            "SingleClassButton{font-size:16px;font_family:楷体;text-align:left;color:white}"
-            "SingleClassButton:pressed{background-color:yellow}"
+            "SingleClassButton{margin:-1px 0;background-color:%s;height:40px;border:1px solid transparent}"
+            "SingleClassButton{font-size:16px;font-family:%s;text-align:left;color:white}"
+            "SingleClassButton:pressed{background-color:%s}" % (
+                FundColor.singleClassButtonSelectColor, Fundsettings.font_family, FundColor.singleClassButtonSelectColor
+            )
         )
         if self.workplace is not None:
             self.workplace.raise_()
 
     def resumeWorkplace(self):
         self.setStyleSheet(
-            "SingleClassButton{margin:-1px 0;background-color:transparent;height:40px;border:1px solid transparent}"
-            "SingleClassButton{font-size:16px;font_family:楷体;text-align:left;color:white}"
-            "SingleClassButton:pressed{background-color:yellow}"
+            "SingleClassButton{margin:-1px 0;background-color:%s;height:40px;border:1px solid transparent}"
+            "SingleClassButton{font-size:16px;font-family:%s;text-align:left;color:white}"
+            "SingleClassButton:pressed{background-color:%s}" % (
+                FundColor.singleClassButtonBackgroundColor, Fundsettings.font_family,
+                FundColor.singleClassButtonSelectColor
+            )
         )
 
 
@@ -393,17 +420,20 @@ class ClassList(QFrame):
     size_width = 150
     size_height = 500
     animDuring = 200
-    bc_color = (120, 90, 90)
+    bc_color = FundColor.classListBackground
 
     def __init__(self):
         super(ClassList, self).__init__()
-
+        self.setStyleSheet(
+            "QFrame{background-color:%s;border:1px solid white}" % (
+                self.bc_color
+            )
+        )
         self.nowTab = None
 
         self.mainLayout = QVBoxLayout()
         self.mySettings()
         self.myLayouts()
-        self.myStyles()
 
     def mySettings(self):
         self.setFixedSize(self.size_width, self.size_height)
@@ -415,12 +445,6 @@ class ClassList(QFrame):
         self.setLayout(self.mainLayout)
         self.mainLayout.addStretch(0)
         self.mainLayout.addStretch(1)
-
-    def myStyles(self):
-        self.setAutoFillBackground(True)
-        palette = QPalette()
-        palette.setBrush(QPalette.Background, QColor(*self.bc_color))
-        self.setPalette(palette)
 
     @staticmethod
     def addSpliter():
@@ -443,6 +467,10 @@ class ClassList(QFrame):
         self.nowTab = button
         button.workplaceDisplay()
 
+    def selectTab(self, tab):
+        self.nowTab = tab.getTab()
+        tab.getTab().workplaceDisplay()
+
 
 class SingleTab:
     def __init__(self, tabName, classList, operationList):
@@ -461,10 +489,14 @@ class SingleTab:
 
 
 class MyNewWindow(QMainWindow):
+    ok = pyqtSignal(dict)
+
     def __init__(self):
         super(MyNewWindow, self).__init__()
-        self.setWindowModality(Qt.ApplicationModal)
-        self.mainbody = QWidget()
+        self.setStyleSheet(
+            "font-family :楷体;font-size:20px"
+        )
+        self.mainbody = QFrame()
         self.mainbodyLayout = QVBoxLayout()
         self.topbar = MyTopBar(self, [0, 0, 0, 1])
 
@@ -473,17 +505,20 @@ class MyNewWindow(QMainWindow):
         self.nav = ClassList()
         self.diaWapper = QWidget()
 
-        self.tab1 = SingleTab('线性表', ["普通线性表", "双向", "c"], ["d", 'e', 'f', 'g'])
-        self.tab2 = SingleTab('线性表2', ["普通线性表2", "双向2", "c2"], ["da", 'ea', 'f', 'g'])
-
+        self.tab1 = SingleTab('线性表', ["普通线性表", "普通线性表", "普通线性表"], ['新建', '遍历', '格式化'])
+        self.tab2 = SingleTab('二叉树', ["普通二叉树", "普通二叉树", "普通二叉树"],
+                              ['新建', '先序遍历', '中序遍历', '后序遍历', '格式化', '深度'])
+        self.tab3 = SingleTab('图', ['有向图', '有向图', '有向图'], ['新建', '深度优先', '广度优先'])
         self.mySettings()
         self.myLayouts()
         self.mySignalConnections()
         self.show()
 
     def mySettings(self):
+        self.setWindowModality(Qt.ApplicationModal)
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.setFixedSize(600, 540)
+        self.nav.selectTab(self.tab1)
 
     def myLayouts(self):
         self.setCentralWidget(self.mainbody)
@@ -504,28 +539,34 @@ class MyNewWindow(QMainWindow):
         self.mainLayout.addWidget(self.diaWapper)
 
         # 倒着插入
-        self.addDialog(self.tab1)
+        self.nav.addTabButton(self.nav.addSpliter())
+        self.addDialog(self.tab3)
         self.nav.addTabButton(self.nav.addSpliter())
         self.addDialog(self.tab2)
+        self.nav.addTabButton(self.nav.addSpliter())
+        self.addDialog(self.tab1)
+        self.nav.addTabButton(self.nav.addSpliter())
 
     def mySignalConnections(self):
         self.tab1.getDialog().submitted.connect(lambda dic: self.submittedEvent(dic, self.tab1.getTab().text()))
         self.tab2.getDialog().submitted.connect(lambda dic: self.submittedEvent(dic, self.tab2.getTab().text()))
+        self.tab3.getDialog().submitted.connect(lambda dic: self.submittedEvent(dic, self.tab3.getTab().text()))
 
     def addDialog(self, tab):
         self.nav.addTabButton(tab.getTab())
         tab.getDialog().setParent(self.diaWapper)
 
     def submittedEvent(self, dic, tabname):
-        print(self.sender())
-        print(tabname)
+        # print(self.sender())
+        # print(tabname)
         dic['name'] = tabname
-        print(dic)
+        # print(dic)
+        self.ok.emit(dic)
 
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     win = MyNewWindow()
     # win = SettingDialog()
-    win.show()
+    # win.show()
     sys.exit(app.exec_())

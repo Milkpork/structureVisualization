@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont, QTextCursor, QKeyEvent
 from PyQt5.QtWidgets import QTextEdit, QApplication, QMainWindow, QWidget
-from CustomWidgets.Fundsettings import Fundsettings
+from CustomWidgets.Fundsettings import Fundsettings, FundColor
 
 
 class MyLogInfo(QTextEdit):
@@ -12,8 +12,10 @@ class MyLogInfo(QTextEdit):
     def __init__(self, workplace: QWidget = None):
         super(MyLogInfo, self).__init__()
         self.setStyleSheet(
-            "QTextEdit{border:2px solid gray;margin:30px 20px 20px 5px;background-color:transparent;border-radius:5px;}"
-            "QTextEdit:focus {border: 2px solid black;}"
+            "QTextEdit{color:%s;border:2px solid %s;margin:30px 20px 20px 5px;background-color:transparent;border-radius:5px;}"
+            "QTextEdit:focus {border: 2px solid %s;}" % (
+                FundColor.fontColor, FundColor.loginfoBorderColor, FundColor.loginfoBorderHoverColor
+            )
         )
         self.backNum = 0
         self.workplace = workplace

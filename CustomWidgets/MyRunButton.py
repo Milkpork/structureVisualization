@@ -3,14 +3,14 @@ import sys
 from PyQt5.QtCore import Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QComboBox, QWidget, QApplication, QLineEdit, QListWidget, QListWidgetItem
-from CustomWidgets.Fundsettings import Fundsettings
+from CustomWidgets.Fundsettings import Fundsettings, FundColor
 
 
 # 输入框，即运行按钮的最前部按钮
 class MyLineEdit(QLineEdit):
-    default_style_color = "transparent"
-    click_style_color = "rgba(200,200,200,.8)"
-    hover_style_color = "rgba(200,200,200,.4)"
+    default_style_color = FundColor.runButtonBackgroundColor
+    click_style_color = FundColor.runButtonClickColor
+    hover_style_color = FundColor.runButtonHoverColor
 
     clicked = pyqtSignal(str)
 
@@ -56,14 +56,15 @@ class MyRunButton(QComboBox):
     def __init__(self, workplace: QWidget = None):
         super(MyRunButton, self).__init__()
         self.setStyleSheet(
-            "MyRunButton{background-color:transparent;border:1px solid black;border-radius:5px}"
+            "MyRunButton{border:1px solid black;border-radius:5px;background-color:transparent;}"
             "MyRunButton::drop-down {border-left:1px solid black;width: 40px;margin:0;}"  # 箭头宽度需要设置按钮的边框才生效
             "MyRunButton::down-arrow {image: url(%s/pic/down.png);height:30px;width:20px;}"
-            "MyRunButton QAbstractItemView{outline:0px;border:1px solid black;}"
+            "MyRunButton QAbstractItemView{outline:0px;border:1px solid black;background-color: %s;}"
             "MyRunButton QAbstractItemView::item{height:60px;outline:0px;}"  # 高度
-            "MyRunButton QAbstractItemView::item:selected{background-color:#fff;color:black}"  # 选中样式
-            "MyRunButton QAbstractItemView::item:hover{background-color:#fff;color:black;border-top:1px solid black;border-bottom:1px solid black}" % (
-                Fundsettings.resource_path)
+            "MyRunButton QAbstractItemView::item:selected{background-color:%s;color:black}"  # 选中样式
+            "MyRunButton QAbstractItemView::item:hover{background-color:%s;color:black;border-top:1px solid black;border-bottom:1px solid black}" % (
+                Fundsettings.resource_path, FundColor.runButtonItemBackgroundColor, FundColor.runButtonItemHoverColor,
+                FundColor.runButtonItemHoverColor)
         )
         self.flag = 0
         self.items = ['test1', 'test2', 'test3', 'test4']

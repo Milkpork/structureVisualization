@@ -5,17 +5,18 @@ from CustomWidgets import MyNode, MyLine, MyView, MyCanvas
 
 
 class Node_LinearList(MyNode):
+    in_limit = 1
+    out_limit = 1
+
     def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板
         super(Node_LinearList, self).__init__(a, b, t, c, n)
         self.lineList = {'next': [], 'previous': []}
 
-    def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
-        self.init_pos = self.pos()
-        for i in self.lineList:
-            for j in self.lineList[i]:
-                j.changePos()
-        self.canvas.view.viewport().update()
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if self.canvas.cursor() == QCursor(Qt.CrossCursor):
+            self.canvas.tempEd = self
+            self.canvas.addLine(self.canvas.tempSt, self.canvas.tempEd, 'next', 'previous')
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -33,6 +34,7 @@ class Node_LinearList(MyNode):
         elif ac.text() == '删除':
             self.delete()
 
+    # !!!
     def delete(self):
         if self == self.canvas.headNode:
             self.canvas.headNode = None
@@ -51,12 +53,8 @@ class Node_LinearList(MyNode):
 
 
 class Line_LinearList(MyLine):
-    def __init__(self, sn=None, en=None, c=None, n=None):
-        super(Line_LinearList, self).__init__(sn, en, c, n)
-
-    def addNodeLine(self):
-        self.startNode.lineList['next'].append(self)
-        self.endNode.lineList['previous'].append(self)
+    def __init__(self, sn=None, en=None, c=None, n=None, stlistName=None, edlistName=None):
+        super(Line_LinearList, self).__init__(sn, en, c, n, stlistName, edlistName)
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -66,13 +64,6 @@ class Line_LinearList(MyLine):
     def menuSlot(self, ac):
         if ac.text() == '删除':
             self.delete()
-
-    def delete(self):
-        # 删除画布字典中的自己
-        del self.canvas.lineDic[self.name]
-        self.startNode.lineList['next'] = []
-        self.endNode.lineList['previous'] = []
-        self.canvas.scene.removeItem(self)  # 删除自身
 
 
 class View_LinearList(MyView):
@@ -84,33 +75,10 @@ class Canvas_LinearList(MyCanvas):
     def __init__(self, workplace=None):
         super(Canvas_LinearList, self).__init__(Node_LinearList, Line_LinearList, View_LinearList, workplace)
 
-    def addLine(self):
-        if self.tempSt == self.tempEd:
-            return
-
-        if len(self.tempSt.lineList['next']) == 1 or len(
-                self.tempEd.lineList['previous']) == 1:
-            self.workplace.logInfo.append('out of limit\n>>> ')
-            self.setCursor(QCursor(Qt.ArrowCursor))
-            self.tempSt = None
-            self.tempEd = None
-            return
-
-        self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
-            self.tempSt, self.tempEd, self, f"line{str(self.lineCount)}"
-        )
-
-        self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
-        self.tempSt = None
-        self.tempEd = None
-        self.lineCount += 1
-
-        self.setCursor(QCursor(Qt.ArrowCursor))
-
     def ergodic(self):
         # 遍历
         if self.headNode is None:  # 没有头节点
-            print("no head node!")
+            self.workplace.logInfo.append('\nno head node！\n>>> ')
             return
 
         nowNode = self.headNode
@@ -132,34 +100,14 @@ class Canvas_LinearList(MyCanvas):
         self.playAnim(queue)
 
     def insert(self, ls):
-        gap = 20  # 节点间的间隔
-        maxSize = (self.width() - MyNode.size) // gap + 1  # 一行最多结点个数
-        minPadding = 5  # 防止上方溢出
         st = self.nodeCount
         for i in ls:
-            self.nodeDic[f"node{str(self.nodeCount)}"] = self.nodeType(
-                gap * (self.nodeCount % maxSize),
-                minPadding + gap * (self.nodeCount // maxSize),
-                i,
-                self,
-                f"node{str(self.nodeCount)}",
-            )
-
-            self.scene.addItem(self.nodeDic[f"node{str(self.nodeCount)}"])
-            self.nodeCount += 1
-
+            self.addNode(i)
         for i in range(st, self.nodeCount - 1):
-            self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
-                self.nodeDic[f"node{str(i)}"],
-                self.nodeDic[f"node{str(i + 1)}"],
-                self,
-                f"line{str(self.lineCount)}",
-            )
-
-            self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
-            self.tempSt = None
-            self.tempEd = None
-            self.lineCount += 1
+            self.addLine(self.nodeDic[f"node{str(i)}"],
+                         self.nodeDic[f"node{str(i + 1)}"],
+                         "next",
+                         "previous")
 
     def clear(self, nodeList=None, lineList=None):
         # 恢复最初样式

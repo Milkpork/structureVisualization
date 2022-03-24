@@ -5,18 +5,19 @@ from CustomWidgets import MyNode, MyLine, MyView, MyCanvas
 
 
 class Node_Graph(MyNode):
+    in_limit = 9999
+    out_limit = 9999
+
     def __init__(self, a, b, t, c, n):  # 分别为，位置x，位置y，文字，父画板
         super(Node_Graph, self).__init__(a, b, t, c, n)
-        self.hasDone = 0
-        self.lineList = {'next': [], 'previous': []}
+        self.lineList = {"next": [], 'previous': []}
+        self.hasVisited = False  # 未访问
 
-    def mouseMoveEvent(self, event):
-        super().mouseMoveEvent(event)
-        self.init_pos = self.pos()
-        for i in self.lineList:
-            for j in self.lineList[i]:
-                j.changePos()
-        self.canvas.view.viewport().update()
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if self.canvas.cursor() == QCursor(Qt.CrossCursor):
+            self.canvas.tempEd = self
+            self.canvas.addLine(self.canvas.tempSt, self.canvas.tempEd, 'next', 'previous')
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -40,26 +41,24 @@ class Node_Graph(MyNode):
         # 删除画布字典中的自己
         del self.canvas.nodeDic[self.name]
 
-        if len(self.lineList['previous']) > 0:
-            for i in self.lineList['previous']:
-                del self.canvas.lineDic[i.name]
-                self.canvas.scene.removeItem(i)
-                i.startNode.lineList['next'].remove(i)
-        if len(self.lineList['next']) > 0:
-            for i in self.lineList['next']:
-                del self.canvas.lineDic[i.name]
-                self.canvas.scene.removeItem(i)
-                i.endNode.lineList['previous'].remove(i)
+        if len(self.lineList['previous']) == 1:
+            del self.canvas.lineDic[self.lineList['previous'][0].name]
+            self.canvas.scene.removeItem(self.lineList['previous'][0])
+            self.lineList['previous'][0].startNode.lineList['next'] = []
+        if len(self.lineList['left']) == 1:
+            del self.canvas.lineDic[self.lineList['left'][0].name]
+            self.canvas.scene.removeItem(self.lineList['left'][0])
+            self.lineList['left'][0].endNode.lineList['previous'] = []
+        if len(self.lineList['right']) == 1:
+            del self.canvas.lineDic[self.lineList['right'][0].name]
+            self.canvas.scene.removeItem(self.lineList['right'][0])
+            self.lineList['right'][0].endNode.lineList['previous'] = []
         self.canvas.scene.removeItem(self)  # 删除自身
 
 
 class Line_Graph(MyLine):
-    def __init__(self, sn=None, en=None, c=None, n=None):
-        super(Line_Graph, self).__init__(sn, en, c, n)
-
-    def addNodeLine(self):
-        self.startNode.lineList['next'].append(self)
-        self.endNode.lineList['previous'].append(self)
+    def __init__(self, sn=None, en=None, c=None, n=None, stlistName=None, edlistName=None):
+        super(Line_Graph, self).__init__(sn, en, c, n, stlistName, edlistName)
 
     def rightMenu(self):
         self.menu.addAction('删除')
@@ -67,13 +66,6 @@ class Line_Graph(MyLine):
     def menuSlot(self, ac):
         if ac.text() == '删除':
             self.delete()
-
-    def delete(self):
-        # 删除画布字典中的自己
-        del self.canvas.lineDic[self.name]
-        self.startNode.lineList['next'].remove(self)
-        self.endNode.lineList['previous'].remove(self)
-        self.canvas.scene.removeItem(self)  # 删除自身
 
 
 class View_Graph(MyView):
@@ -85,96 +77,47 @@ class Canvas_Graph(MyCanvas):
     def __init__(self, workplace=None):
         super(Canvas_Graph, self).__init__(Node_Graph, Line_Graph, View_Graph, workplace)
 
-    def addLine(self):
-        if self.tempSt == self.tempEd:
-            return
-
-        self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
-            self.tempSt, self.tempEd, self, f"line{str(self.lineCount)}"
-        )
-
-        self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
-        self.tempSt = None
-        self.tempEd = None
-        self.lineCount += 1
-
-        self.setCursor(QCursor(Qt.ArrowCursor))
-
-    def ergodic(self, mode=0):  # 0为dfs, 1为bfs
-        # difficult!!!!!!
-        # fuck it !
+    def ergodic(self, mode):
         # 遍历
         if self.headNode is None:  # 没有头节点
             print("no head node!")
             return
         nowNode = self.headNode
         queue = []
+        tempList = []  # 广度优先零时列表
         self.workplace.logInfo.append("result : ")
 
-        tempList = []  # bfs Queue
-
-        def dfs(node):
+        def depthFirst(node):  # 深度优先
+            node.hasVisited = True
             queue.append(node)
-            node.hasDone = 1
             self.workplace.logInfo.append(f"{node.text.text()} ")
-            if len(node.lineList['next']) > 0:
-                for i in node.lineList['next']:
-                    if i.endNode.hasDone == 1:
-                        continue
-                    queue.append(i)
-                    dfs(i.endNode)
+            if node.lineList["next"]:
+                for line in node.lineList["next"]:
+                    if not line.endNode.hasVisited:
+                        queue.append(line)
+                        depthFirst(line.endNode)
 
-        def bfs(node):
+        def breadthFirst(node):  # 广度优先
+            node.hasVisited = True
             queue.append(node)
-            node.hasDone = 1
             self.workplace.logInfo.append(f"{node.text.text()} ")
-            if node.lineList['next']:
-                for line in node.lineList['next']:
-                    tempList.append(line)
-                    tempList.append(line.endNode)
-            if tempList and tempList[1].hasDone == 0:
-                queue.append(tempList.pop(0))
-                bfs(tempList.pop(0))
+            for i in node.lineList["next"]:
+                tempList.append(i)
+            if tempList:
+                line = tempList.pop(0)
+                if not line.endNode.hasVisited:
+                    queue.append(line)
+                    breadthFirst(line.endNode)
 
         if mode == 0:
-            dfs(nowNode)
+            depthFirst(nowNode)
         elif mode == 1:
-            bfs(nowNode)
+            breadthFirst(nowNode)
         self.workplace.logInfo.append("\n>>> ")
         for i in queue:
             if type(i) == self.nodeType:
-                i.hasDone = 0
+                i.hasVisited = False
         self.playAnim(queue)
-
-    def insert(self, ls):
-        gap = 20  # 节点间的间隔
-        maxSize = (self.width() - MyNode.size) // gap + 1  # 一行最多结点个数
-        minPadding = 5  # 防止上方溢出
-        st = self.nodeCount
-        for i in ls:
-            self.nodeDic[f"node{str(self.nodeCount)}"] = self.nodeType(
-                gap * (self.nodeCount % maxSize),
-                minPadding + gap * (self.nodeCount // maxSize),
-                i,
-                self,
-                f"node{str(self.nodeCount)}",
-            )
-
-            self.scene.addItem(self.nodeDic[f"node{str(self.nodeCount)}"])
-            self.nodeCount += 1
-
-        for i in range(st, self.nodeCount - 1):
-            self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
-                self.nodeDic[f"node{str(i)}"],
-                self.nodeDic[f"node{str(i + 1)}"],
-                self,
-                f"line{str(self.lineCount)}",
-            )
-
-            self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
-            self.tempSt = None
-            self.tempEd = None
-            self.lineCount += 1
 
     def clear(self, nodeList=None, lineList=None):
         # 恢复最初样式
@@ -195,34 +138,3 @@ class Canvas_Graph(MyCanvas):
             line.setPen(pen)
         if self.headNode is not None:
             self.headNode.setPen(QPen(QColor(255, 165, 0), 2))
-
-    def format(self):
-        flag = 1
-        nowPos = [0, 0]
-        if self.headNode is None:
-            return
-        nowNode = self.headNode
-        while True:
-            nowNode.setPos(*nowPos)
-            nowNode.init_pos = nowNode.pos()
-            if flag == 1:
-                nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
-                if nowPos[0] > self.size:
-                    flag = -1
-                    nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
-                    nowPos[1] = nowPos[1] - flag * self.nodeType.size * 2
-            elif flag == -1:
-                nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
-                if nowPos[0] < 0:
-                    flag = 1
-                    nowPos[0] = nowPos[0] + flag * self.nodeType.size * 2
-                    nowPos[1] = nowPos[1] + flag * self.nodeType.size * 2
-
-            for i in nowNode.lineList:
-                for j in nowNode.lineList[i]:
-                    j.changePos()
-            self.view.viewport().update()
-            if len(nowNode.lineList['next']) == 0:
-                break
-            else:
-                nowNode = nowNode.lineList['next'][0].endNode

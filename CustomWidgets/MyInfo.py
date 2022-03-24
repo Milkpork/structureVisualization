@@ -1,7 +1,7 @@
 import sys
 
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QLabel, QWidget, QMainWindow, QApplication, QVBoxLayout
+from PyQt5.QtWidgets import QLabel, QWidget, QMainWindow, QApplication, QVBoxLayout, QToolTip
 from CustomWidgets.Fundsettings import Fundsettings
 
 
@@ -12,13 +12,14 @@ class MyInfo(QWidget):
 
     def __init__(self, title: str = 'test', edition: str = 'testEdition'):
         super(MyInfo, self).__init__()
-
-        self.titleWidget = QLabel(title)
+        self.title = title
+        self.titleWidget = QLabel()
         self.editionWidget = QLabel(edition)
         self.mainLayout = QVBoxLayout()
 
         self.mySettings()
         self.myLayouts()
+        self.settingText()
 
     def mySettings(self):
         self.setMaximumHeight(120)
@@ -34,6 +35,15 @@ class MyInfo(QWidget):
         self.mainLayout.addWidget(self.titleWidget)
         self.mainLayout.addWidget(self.editionWidget)
 
+    def settingText(self):
+        QToolTip.setFont(QFont('SansSerif', 12))
+
+        if len(self.title) > 4:
+            self.titleWidget.setText(self.title[:4] + "…")
+        else:
+            self.titleWidget.setText(self.title)
+        self.titleWidget.setToolTip(self.title)
+
     # 接口:修改标题文字
     def setTitleText(self, title: str):
         self.titleWidget.setText(title)
@@ -43,7 +53,7 @@ if __name__ == '__main__':
     class test(QMainWindow):
         def __init__(self):
             super(test, self).__init__()
-            self.a = MyInfo()
+            self.a = MyInfo("hjkasldjhlkasjda")
             self.a.setParent(self)
             self.resize(400, 400)
 

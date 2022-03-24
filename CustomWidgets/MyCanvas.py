@@ -4,11 +4,13 @@ from PyQt5.QtCore import Qt, QPointF, QLineF, QTimeLine
 from PyQt5.QtGui import QPen, QBrush, QColor, QFont, QCursor, QPainter, QPolygonF, QPainterPath
 from PyQt5.QtWidgets import QGraphicsView, QGraphicsScene, QGraphicsEllipseItem, QApplication, \
     QVBoxLayout, QGraphicsItem, QGraphicsSimpleTextItem, QMenu, QGraphicsLineItem, QFrame, QInputDialog
-from CustomWidgets.Fundsettings import Fundsettings
+from CustomWidgets.Fundsettings import Fundsettings, FundColor
 
 
 class MyNode(QGraphicsEllipseItem):
     size = 40
+    in_limit = 1
+    out_limit = 1
 
     def __init__(self, loc_x, loc_y, text, canv, name):  # 分别为，位置x，位置y，文字，父画板,name
         """
@@ -42,8 +44,8 @@ class MyNode(QGraphicsEllipseItem):
         self.setZValue(1)
 
     def myStyles(self):
-        self.setPen(QPen(Qt.black, 2))  # 边框
-        self.setBrush(QBrush(QColor(255, 255, 255)))  # 内容填充
+        self.setPen(QPen(QColor(*FundColor.nodeBorderColor), 2))  # 边框
+        self.setBrush(QBrush(QColor(*FundColor.nodeBrushColor)))  # 内容填充
 
     def myTextSettings(self):
         self.text.setFont(QFont(Fundsettings.font_family, self.size // 2))
@@ -58,10 +60,7 @@ class MyNode(QGraphicsEllipseItem):
         self.menu.setWindowFlags(self.menu.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
 
     def mousePressEvent(self, event):
-        super().mousePressEvent(event)
-        if self.canvas.cursor() == QCursor(Qt.CrossCursor):
-            self.canvas.tempEd = self
-            self.canvas.addLine()
+        pass
 
     def mouseDoubleClickEvent(self, event):
         super().mouseDoubleClickEvent(event)
@@ -70,12 +69,16 @@ class MyNode(QGraphicsEllipseItem):
             self.text.setText(f"{age}")
             self.myTextSettings()
 
-    # 需要重载:移动
     def mouseMoveEvent(self, event):
         super().mouseMoveEvent(event)
+        self.init_pos = self.pos()
+        for i in self.lineList:
+            for j in self.lineList[i]:
+                j.changePos()
+        self.canvas.view.viewport().update()
 
     def contextMenuEvent(self, event):
-        super().contextMenuEvent(event)
+        # super().contextMenuEvent(event)
         self.menu.exec(QCursor().pos())
 
     # 需要重载:右击菜单
@@ -124,11 +127,14 @@ class MyNode(QGraphicsEllipseItem):
 class MyLine(QGraphicsLineItem):
     line_width = 3
 
-    def __init__(self, sn=None, en=None, c=None, n=None):
+    def __init__(self, sn=None, en=None, c=None, n=None, stlistName=None, edlistName=None):
         super(MyLine, self).__init__()
 
         self.startNode = sn  # 头节点
         self.endNode = en  # 尾结点
+
+        self.stlistName = stlistName
+        self.edlistName = edlistName
 
         self.canvas = c
         self.name = n
@@ -143,7 +149,7 @@ class MyLine(QGraphicsLineItem):
 
         self.mySettings()
         self.myMenuSettings()
-        self.addNodeLine()
+        self.addNodeLine(stlistName, edlistName)
 
     def mySettings(self):
         self.changePos()
@@ -154,9 +160,9 @@ class MyLine(QGraphicsLineItem):
         self.menu.setWindowFlags(self.menu.windowFlags() | Qt.FramelessWindowHint | Qt.NoDropShadowWindowHint)
         self.menu.triggered.connect(self.menuSlot)
 
-    # 需要重载:将自己加入头尾结点的字典中
-    def addNodeLine(self):
-        pass
+    def addNodeLine(self, stlistName, edlistName):
+        self.startNode.lineList[stlistName].append(self)
+        self.endNode.lineList[edlistName].append(self)
 
     # 重载绘制函数
     def paint(self, QP, QStyleOptionGraphicsItem, QWidget_widget=None):
@@ -283,9 +289,12 @@ class MyLine(QGraphicsLineItem):
     def menuSlot(self, ac):
         pass
 
-    # 需要重载:删除本连线函数
     def delete(self):
-        pass
+        # 删除画布字典中的自己
+        del self.canvas.lineDic[self.name]
+        self.startNode.lineList[self.stlistName].remove(self)
+        self.endNode.lineList[self.edlistName].remove(self)
+        self.canvas.scene.removeItem(self)  # 删除自身
 
     def resume(self):
         pass
@@ -312,7 +321,7 @@ class MyView(QGraphicsView):
 
     def mySettings(self):
         self.setRenderHint(QPainter.Antialiasing)
-        self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        # self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setAlignment(Qt.AlignLeft | Qt.AlignTop)  # 取消居中
 
@@ -364,22 +373,52 @@ class MyCanvas(QFrame):
 
         self.setAttribute(Qt.WA_TranslucentBackground, True)
 
-    def addNode(self):
+    def addNode(self, text, posx=-1, posy=-1):
         gap = 20  # 节点间的间隔
         maxSize = (self.width() - MyNode.size) // gap + 1  # 一行最多结点个数
         minPadding = 5  # 防止上方溢出
+        if posx == -1:
+            posx = gap * (self.nodeCount % maxSize)
+        if posy == -1:
+            posy = minPadding + gap * (self.nodeCount // maxSize)
         self.nodeDic[f"node{str(self.nodeCount)}"] = self.nodeType(
-            gap * (self.nodeCount % maxSize),
-            minPadding + gap * (self.nodeCount // maxSize),
-            str(self.nodeCount),
+            posx,
+            posy,
+            str(text),
             self,
             f"node{str(self.nodeCount)}",
         )
+        self.scene.addItem(self.nodeDic[f"node{str(self.nodeCount)}"])
+        self.nodeCount += 1
 
-        return self.nodeDic[f"node{str(self.nodeCount)}"]
+        return self.nodeDic[f"node{str(self.nodeCount - 1)}"]
 
-    def addLine(self):
-        pass
+    def addLine(self, stnode, ednode, stlistName: str, edlistName: str):
+        if stnode == ednode:
+            return
+        if len(stnode.lineList[stlistName]) >= stnode.out_limit or len(
+                ednode.lineList[edlistName]) >= ednode.in_limit:
+            self.workplace.logInfo.append('out of limit\n>>> ')
+            self.setCursor(QCursor(Qt.ArrowCursor))
+            self.tempSt = None
+            self.tempEd = None
+            return
+
+        self.lineDic[f"line{str(self.lineCount)}"] = self.lineType(
+            stnode,
+            ednode,
+            self,
+            f"line{str(self.lineCount)}",
+            stlistName,
+            edlistName
+        )
+
+        self.scene.addItem(self.lineDic[f"line{str(self.lineCount)}"])
+        self.tempSt = None
+        self.tempEd = None
+        self.lineCount += 1
+
+        self.setCursor(QCursor(Qt.ArrowCursor))
 
     def setHeadNode(self, node):
         # 设置头节点接口
