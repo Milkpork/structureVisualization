@@ -55,7 +55,7 @@ class RunButton_LinearList(MyRunButton):
 
 class WorkPlace(QWidget):
 
-    def __init__(self, t='Canvas', te='线性表', ls=None):  # 参数为text和textEdition
+    def __init__(self, t='Canvas', te='单向链表', ls=None):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
 
         if ls is None:
@@ -67,7 +67,8 @@ class WorkPlace(QWidget):
 
         # 组件
         self.info = Info_LinearList(self.title, self.textEdition)
-        self.canvas = Canvas_LinearList(self)
+        if self.textEdition == "单向链表":
+            self.canvas = Canvas_LinearList(self)
         self.runButton = RunButton_LinearList(self, ls)
         self.logInfo = LogInfo_LinearList(self)
 
@@ -138,6 +139,6 @@ class WorkPlace(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = WorkPlace('canvas', 'LinearList', ['新建', '遍历', '格式化'])
+    win = WorkPlace('canvas', '单向链表', ['新建', '遍历', '格式化'])
     win.show()
     sys.exit(app.exec_())

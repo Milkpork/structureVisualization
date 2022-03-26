@@ -1,6 +1,12 @@
 import os
 
 
+#
+# path = os.path.abspath(__file__).split('\\')
+#
+# resource_path = '/'.join(path[:-2]) + "/mySources"  # 资源路径
+# print(resource_path)
+
 class Fundsettings:
     path = os.path.abspath(__file__).split('\\')
     resource_path = '/'.join(path[:-2]) + "/mySources"  # 资源路径

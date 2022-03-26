@@ -3,7 +3,7 @@ import sys
 from PyQt5.QtCore import QRect, Qt, pyqtSignal
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtWidgets import QWidget, QPushButton, QLabel, QLineEdit, QMainWindow, QApplication, QFrame, \
-    QVBoxLayout, QHBoxLayout, QGridLayout
+    QVBoxLayout, QHBoxLayout, QGridLayout, QMessageBox
 from CustomWidgets import Fundsettings, MyTopBar, FundColor
 
 
@@ -340,20 +340,14 @@ class SettingDialog(QFrame):
         if len(infoDic['title']) > 0 and infoDic['class'] is not None and len(infoDic["options"]) > 0:
             self.submitted.emit(infoDic)
         else:
-            print("error")
+            QMessageBox.critical(QWidget(), '错误', '缺少必选项', QMessageBox.Yes | QMessageBox.No, QMessageBox.Yes)
 
     def closeButtonEvent(self):
-        print("close")
         wind = self.parent()
         while type(wind) != MyNewWindow:
             wind = wind.parent()
-        # self.parent().parent().parent().close()
         else:
             wind.close()
-
-    def closeEvent(self, event):
-        super().closeEvent(event)
-        print("close2")
 
     @staticmethod
     def getInfo(dia):
@@ -381,7 +375,7 @@ class SingleClassButton(QPushButton):
         self.setContentsMargins(0, 0, 0, 0)
         self.resize(self.myWidth, self.myHeight)
         self.setText(self.title)
-        self.setIcon(QIcon("%s/pic/minimizeButton.png" % Fundsettings.resource_path))
+        self.setIcon(QIcon("E:/structureVisualization/mySources/pic/minimizeButton.png"))
         self.setStyleSheet(
             "SingleClassButton{margin:-1px 0;background-color:%s;height:40px;border:1px solid transparent}"
             "SingleClassButton{font-size:16px;font-family:%s;text-align:left;color:white}"
@@ -505,10 +499,10 @@ class MyNewWindow(QMainWindow):
         self.nav = ClassList()
         self.diaWapper = QWidget()
 
-        self.tab1 = SingleTab('线性表', ["普通线性表", "普通线性表", "普通线性表"], ['新建', '遍历', '格式化'])
+        self.tab1 = SingleTab('线性表', ["单向链表", "单向链表", "单向链表"], ['新建', '遍历', '格式化'])
         self.tab2 = SingleTab('二叉树', ["普通二叉树", "普通二叉树", "普通二叉树"],
                               ['新建', '先序遍历', '中序遍历', '后序遍历', '格式化', '深度'])
-        self.tab3 = SingleTab('图', ['有向图', '有向图', '有向图'], ['新建', '深度优先', '广度优先'])
+        self.tab3 = SingleTab('图', ['有向图', '无向图', '有向图'], ['新建', '深度优先', '广度优先'])
         self.mySettings()
         self.myLayouts()
         self.mySignalConnections()
@@ -557,10 +551,7 @@ class MyNewWindow(QMainWindow):
         tab.getDialog().setParent(self.diaWapper)
 
     def submittedEvent(self, dic, tabname):
-        # print(self.sender())
-        # print(tabname)
         dic['name'] = tabname
-        # print(dic)
         self.ok.emit(dic)
 
 

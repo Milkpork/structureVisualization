@@ -89,7 +89,7 @@ class Canvas_BinaryTree(MyCanvas):
     def ergodic(self, mode):
         # 遍历
         if self.headNode is None:  # 没有头节点
-            print("no head node!")
+            self.workplace.logInfo.append('no head node！\n>>> ')
             return
         nowNode = self.headNode
         queue = []
@@ -137,6 +137,9 @@ class Canvas_BinaryTree(MyCanvas):
 
     def insert(self, ls):
         exceptList = ['null', '-1', 'Null', 'None']
+        if ls[0] in exceptList:
+            self.workplace.logInfo.append('\nempty list\n>>> ')
+            return
 
         def fun(node, i, isRight=1):
             no = self.addNode(ls[i])

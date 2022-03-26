@@ -4,6 +4,7 @@ from PyQt5.QtGui import QPalette, QColor
 from PyQt5.QtWidgets import QApplication, QWidget, QVBoxLayout, QHBoxLayout, QSizePolicy
 from CustomWidgets import MyInfo, MyLogInfo, MyRunButton
 from Structures.Graph.Graph_Canvas import Canvas_Graph
+from Structures.Graph.UndirectedGraph_Canvas import Canvas_Graph_Undirected
 
 
 class Info_Graph(MyInfo):
@@ -46,7 +47,7 @@ class RunButton_Graph(MyRunButton):
 
 class WorkPlace(QWidget):
 
-    def __init__(self, t='Canvas', te='线性表', ls=None):  # 参数为text和textEdition
+    def __init__(self, t='Canvas', te='有向图', ls=None):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
 
         if ls is None:
@@ -58,7 +59,10 @@ class WorkPlace(QWidget):
 
         # 组件
         self.info = Info_Graph(self.title, self.textEdition)
-        self.canvas = Canvas_Graph(self)
+        if self.textEdition == "无向图":
+            self.canvas = Canvas_Graph_Undirected(self)
+        elif self.textEdition == "有向图":
+            self.canvas = Canvas_Graph(self)
         self.runButton = RunButton_Graph(self, ls)
         self.logInfo = LogInfo_Graph(self)
 
@@ -129,6 +133,6 @@ class WorkPlace(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = WorkPlace('canvas', 'Graph', ['新建', '深度优先', '广度优先'])
+    win = WorkPlace('canvas', '无向图', ['新建', '深度优先', '广度优先'])
     win.show()
     sys.exit(app.exec_())

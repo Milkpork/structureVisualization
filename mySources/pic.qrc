@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>pic/down.png</file>
+        <file>pic/exitButton.png</file>
+        <file>pic/maximizeButton.png</file>
+        <file>pic/minimizeButton.png</file>
+        <file>pic/plus.png</file>
+        <file>pic/plus2.png</file>
+        <file>pic/settingButton.png</file>
+    </qresource>
+</RCC>

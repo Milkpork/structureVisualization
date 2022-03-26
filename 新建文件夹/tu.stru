@@ -1,0 +1,8 @@
+<type> 图
+<title> 萨达撒s
+<edition> 有向图
+<functions> ['新建', '深度优先', '广度优先']
+<node> {'0': '0', '1': '1', '2': '2', '3': '3'}
+<connections> {'0': [['1', 'next', 'previous'], ['2', 'next', 'previous']], '3': [['0', 'next', 'previous']]}
+<headNode> 0
+<positions> {'0': (253.0, 240.0), '1': (121.0, 165.0), '2': (333.0, 185.0), '3': (341.0, 88.0)}

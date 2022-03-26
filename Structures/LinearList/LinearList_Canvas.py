@@ -58,8 +58,6 @@ class Line_LinearList(MyLine):
 
     def rightMenu(self):
         self.menu.addAction('删除')
-        self.menu.addSeparator()
-        self.menu.addAction('反转')
 
     def menuSlot(self, ac):
         if ac.text() == '删除':
@@ -78,7 +76,7 @@ class Canvas_LinearList(MyCanvas):
     def ergodic(self):
         # 遍历
         if self.headNode is None:  # 没有头节点
-            self.workplace.logInfo.append('\nno head node！\n>>> ')
+            self.workplace.logInfo.append('no head node！\n>>> ')
             return
 
         nowNode = self.headNode

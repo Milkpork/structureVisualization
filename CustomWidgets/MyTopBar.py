@@ -3,6 +3,7 @@ from PyQt5.QtGui import QCursor, QMouseEvent, QFont
 from PyQt5.QtWidgets import QPushButton, QHBoxLayout, QMenu, QApplication, QMainWindow, QAction, QFileDialog, \
     QFrame
 from CustomWidgets.Fundsettings import Fundsettings, FundColor
+from CustomWidgets import pic
 
 
 # 按钮基类
@@ -27,9 +28,9 @@ class minimizeButton(TopBarButton):
     def __init__(self, window: QMainWindow = None):
         super(minimizeButton, self).__init__(window)
         self.setStyleSheet(
-            "minimizeButton{border-image: url(%s/pic/minimizeButton.png);border-radius: %dpx;}"
+            "minimizeButton{border-image: url(:pic/minimizeButton.png);border-radius: %dpx;}"
             "minimizeButton:hover{background-color:%s}" % (
-                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
+                TopBarButton.radius // 2, TopBarButton.hover_color)
         )
         self.clicked.connect(self.minimize)
 
@@ -42,9 +43,9 @@ class maximizeButton(TopBarButton):
     def __init__(self, window: QMainWindow = None):
         super(maximizeButton, self).__init__(window)
         self.setStyleSheet(
-            "maximizeButton{border-image: url(%s/pic/maximizeButton.png);border-radius: %dpx;}"
+            "maximizeButton{border-image: url(:pic/maximizeButton.png);border-radius: %dpx;}"
             "maximizeButton:hover{background-color:%s}" % (
-                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
+                TopBarButton.radius // 2, TopBarButton.hover_color)
         )
         self.clicked.connect(self.maximize)
 
@@ -63,9 +64,9 @@ class exitButton(TopBarButton):
     def __init__(self, window: QMainWindow = None):
         super(exitButton, self).__init__(window)
         self.setStyleSheet(
-            "exitButton{border-image: url(%s/pic/exitButton.png);border-radius: %dpx;}"
+            "exitButton{border-image: url(:pic/exitButton.png);border-radius: %dpx;}"
             "exitButton:hover{background-color:%s}" % (
-                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
+                TopBarButton.radius // 2, TopBarButton.hover_color)
         )
         self.clicked.connect(self.closeWindow)
 
@@ -79,9 +80,9 @@ class settingButton(TopBarButton):
     def __init__(self, window: QMainWindow = None):
         super(settingButton, self).__init__(window)
         self.setStyleSheet(
-            "settingButton{border-image: url(%s/pic/settingButton.png);border-radius: %dpx;}"
+            "settingButton{border-image: url(:pic/settingButton.png);border-radius: %dpx;}"
             "settingButton:hover{background-color: %s;}" % (
-                Fundsettings.resource_path, TopBarButton.radius // 2, TopBarButton.hover_color)
+                TopBarButton.radius // 2, TopBarButton.hover_color)
         )
 
 
@@ -136,6 +137,8 @@ class settingsMenu(QMenu):
             self.saveFunc()
         elif ac.text() == "导入":
             self.loadFunc()
+        elif ac.text() == "关闭":
+            self.window.close()
 
     def saveFunc(self):
         workplace = self.window.nav.getNowWorkplace()
@@ -283,7 +286,7 @@ class MyTopBar(QFrame):
 
     def myStyles(self):
         # 设置窗口为无边框样式
-        self.window.setWindowFlags(Qt.FramelessWindowHint)
+        self.window.setWindowFlags(Qt.FramelessWindowHint | Qt.Window)
 
     # press+move+release三者构成窗口可拖拽
     def mousePressEvent(self, event: QMouseEvent):
@@ -305,6 +308,9 @@ class MyTopBar(QFrame):
             else:
                 self.window.move(event.globalPos() - self.m_Position)  # 更改窗口位置
             event.accept()
+            workplace = self.window.workplace
+            for i in workplace.children():
+                i.resize(workplace.width(), workplace.height())
 
     def mouseReleaseEvent(self, event: QMouseEvent):
         self.m_flag = False

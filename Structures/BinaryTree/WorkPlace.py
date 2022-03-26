@@ -67,7 +67,7 @@ class RunButton_BinaryTree(MyRunButton):
 
 class WorkPlace(QWidget):
 
-    def __init__(self, t='Canvas', te='二叉树', ls=None):  # 参数为text和textEdition
+    def __init__(self, t='Canvas', te='普通二叉树', ls=None):  # 参数为text和textEdition
         super(WorkPlace, self).__init__()
         if ls is None:
             ls = []
@@ -78,7 +78,8 @@ class WorkPlace(QWidget):
 
         # 组件
         self.info = Info_BinaryTree(self.title, self.textEdition)
-        self.canvas = Canvas_BinaryTree(self)
+        if self.textEdition == "普通二叉树":
+            self.canvas = Canvas_BinaryTree(self)
         self.runButton = RunButton_BinaryTree(self, ls)
         self.logInfo = LogInfo_BinaryTree(self)
 
@@ -148,6 +149,6 @@ class WorkPlace(QWidget):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    win = WorkPlace('canvas', 'BinaryTree', ['新建', '先序遍历', '中序遍历', '后序遍历', '格式化', '深度'])
+    win = WorkPlace('canvas', '普通二叉树', ['新建', '先序遍历', '中序遍历', '后序遍历', '格式化', '深度'])
     win.show()
     sys.exit(app.exec_())

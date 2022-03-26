@@ -60,24 +60,6 @@ class MainWindow(QMainWindow):
         self.nav.setParent(self)
         self.nav.move(0, MyTopBar.fix_height)
 
-    def paintEvent(self, event):
-        # 阴影
-        path = QPainterPath()
-        path.setFillRule(Qt.WindingFill)
-        pat = QPainter(self)
-        pat.setRenderHint(pat.Antialiasing)
-        pat.fillPath(path, QBrush(Qt.white))
-        color = QColor(192, 192, 192, 50)
-        for i in range(10):
-            i_path = QPainterPath()
-            i_path.setFillRule(Qt.WindingFill)
-            ref = QRectF(10 - i, 10 - i, self.width() - (10 - i) * 2, self.height() - (10 - i) * 2)
-            # i_path.addRect(ref)
-            i_path.addRoundedRect(ref, 8, 8)
-            color.setAlpha(int(150 - i ** 0.5 * 50))
-            pat.setPen(color)
-            pat.drawPath(i_path)
-
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

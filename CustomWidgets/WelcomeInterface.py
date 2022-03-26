@@ -36,6 +36,9 @@ class Title(QLabel):
 class WelcomeInterface(QFrame):
     def __init__(self, tab, window):
         super(WelcomeInterface, self).__init__()
+        self.setStyleSheet(
+            "WelcomeInterface{background-color:white}"
+        )
         self.tab = tab
         self.myWindow = window
         self.mainLayout = QVBoxLayout()

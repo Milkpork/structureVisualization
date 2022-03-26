@@ -56,12 +56,12 @@ class SingleTabButton(QPushButton):
         )
         if self.state == 0:
             self.setText(f'{self.title[:1]}…')
-            self.setIcon(QIcon("%s/pic/minimizeButton.png" % Fundsettings.resource_path))
+            self.setIcon(QIcon("E:/structureVisualization/mySources/pic/minimizeButton.png"))
             self.resize(self.fold_width, self.myHeight)
         elif self.state == 1:
             self.resize(self.unfold_width, self.myHeight)
             self.setText(self.title)
-            self.setIcon(QIcon("%s/pic/minimizeButton.png" % Fundsettings.resource_path))
+            self.setIcon(QIcon("E:/structureVisualization/mySources/pic/minimizeButton.png"))
 
     def resume(self):
         self.nowColor = self.bc_color
@@ -84,9 +84,9 @@ class MyAddButton(QPushButton):
     def __init__(self, tabbar):
         super(MyAddButton, self).__init__()
         self.setStyleSheet(
-            "MyAddButton{background-color:%s;border-image: url(%s/pic/plus2.png);border-radius: %dpx;}"
+            "MyAddButton{background-color:%s;border-image: url(:pic/plus2.png);border-radius: %dpx;}"
             "MyAddButton:hover{background-color:%s}" % (
-                self.bc_color, Fundsettings.resource_path, self.size // 2, self.hover_color)
+                self.bc_color, self.size // 2, self.hover_color)
         )
         self.tabBar = tabbar
         self.mySettings()

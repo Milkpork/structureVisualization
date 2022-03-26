@@ -238,12 +238,6 @@ class MyLine(QGraphicsLineItem):
             p1 = v.p2()
             p2 = n.p2()
             p3 = n2.p2()
-
-            # # # 方法1
-            # # QPainter.drawLine(self.line)
-            # # QPainter.drawPolygon(p1, p2, p3)
-            #
-            # # 方法2
             arrow = QPolygonF([p1, p2, p3, p1])
             path = QPainterPath()
             path.moveTo(self.startPos)
@@ -281,8 +275,7 @@ class MyLine(QGraphicsLineItem):
                      self.endNode.rect().x() + self.endNode.rect().width() // 2 + self.endNode.pos().x(),
                      self.endNode.rect().y() + self.endNode.rect().height() // 2 + self.endNode.pos().y())
 
-    # 需要重载:右击菜单内容
-    def rightMenu(self):
+        # 需要重载:右击菜单内容 def rightMenu(self):
         pass
 
     # 需要重载:右击响应函数
@@ -295,6 +288,9 @@ class MyLine(QGraphicsLineItem):
         self.startNode.lineList[self.stlistName].remove(self)
         self.endNode.lineList[self.edlistName].remove(self)
         self.canvas.scene.removeItem(self)  # 删除自身
+
+    def rightMenu(self):
+        pass
 
     def resume(self):
         pass

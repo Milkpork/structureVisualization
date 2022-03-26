@@ -58,12 +58,12 @@ class MyRunButton(QComboBox):
         self.setStyleSheet(
             "MyRunButton{border:1px solid black;border-radius:5px;background-color:transparent;}"
             "MyRunButton::drop-down {border-left:1px solid black;width: 40px;margin:0;}"  # 箭头宽度需要设置按钮的边框才生效
-            "MyRunButton::down-arrow {image: url(%s/pic/down.png);height:30px;width:20px;}"
+            "MyRunButton::down-arrow {image: url(:pic/down.png);height:30px;width:20px;}"
             "MyRunButton QAbstractItemView{outline:0px;border:1px solid black;background-color: %s;}"
             "MyRunButton QAbstractItemView::item{height:60px;outline:0px;}"  # 高度
             "MyRunButton QAbstractItemView::item:selected{background-color:%s;color:black}"  # 选中样式
             "MyRunButton QAbstractItemView::item:hover{background-color:%s;color:black;border-top:1px solid black;border-bottom:1px solid black}" % (
-                Fundsettings.resource_path, FundColor.runButtonItemBackgroundColor, FundColor.runButtonItemHoverColor,
+                FundColor.runButtonItemBackgroundColor, FundColor.runButtonItemHoverColor,
                 FundColor.runButtonItemHoverColor)
         )
         self.flag = 0
